@@ -59,7 +59,7 @@ std::string Server::receiveRequest(int connectionSocket) const {
     bool isAnyBytesRead = false;
     std::string request;
     while((bytesReceived = (int) recv(connectionSocket, buf, 255, 0)) != -1 || !isAnyBytesRead) {
-        if(bytesReceived) isAnyBytesRead = true;
+        if(bytesReceived > 0) isAnyBytesRead = true;
         for(int i = 0; i < bytesReceived; i++) {
             request += buf[i];
         }
