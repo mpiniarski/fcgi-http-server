@@ -27,19 +27,12 @@ Server::Server() {
 }
 
 void Server::listenForever() {
-    int error;
-
     while(true) {
         struct sockaddr_in clientAddr;
         socklen_t clientAddrSize = sizeof(sockaddr_in);
         int connectionSocket = accept(this->tcpSocket, (sockaddr*) &clientAddr, &clientAddrSize);
         if(connectionSocket == -1){
             perror("Accept");
-            exit(1);
-        }
-        error = fcntl(connectionSocket, F_SETFL, O_NONBLOCK);
-        if(error == -1) {
-            perror("Set file descriptor error");
             exit(1);
         }
 
@@ -57,15 +50,40 @@ std::string Server::receiveRequest(int connectionSocket) const {
     int bytesReceived;
     char buf[255];
     bool isAnyBytesRead = false;
+    int error;
     std::string request;
-    while((bytesReceived = (int) recv(connectionSocket, buf, 255, 0)) != -1 || !isAnyBytesRead) {
-        if(bytesReceived > 0) isAnyBytesRead = true;
+
+    bytesReceived = (int) recv(connectionSocket, buf, 255, 0);
+    if (bytesReceived > 0) {
         for(int i = 0; i < bytesReceived; i++) {
             request += buf[i];
         }
+
+        if (bytesReceived == 255) {
+            int options = fcntl(connectionSocket, F_GETFL);
+            error = fcntl(connectionSocket, F_SETFL, options | O_NONBLOCK);
+            if(error == -1) {
+                perror("Set file descriptor error");
+                exit(1);
+            }
+            while((bytesReceived = (int) recv(connectionSocket, buf, 255, 0) > 0)) {
+                for(int i = 0; i < bytesReceived; i++) {
+                    request += buf[i];
+                }
+            }
+            error = errno;
+            if(bytesReceived == -1 && error != EAGAIN && error != EWOULDBLOCK) {
+                perror("Receive fail");
+                exit(1);
+            }
+            error = fcntl(connectionSocket, F_SETFL, options);
+            if(error == -1) {
+                perror("Set file descriptor error");
+                exit(1);
+            }
+        }
     }
-    int error = errno;
-    if(bytesReceived == -1 && error != EAGAIN && error != EWOULDBLOCK){
+    if(bytesReceived == -1){
         perror("Receive fail");
         exit(1);
     }
