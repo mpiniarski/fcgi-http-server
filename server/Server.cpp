@@ -2,6 +2,7 @@
 #include <cstring>
 #include "Server.h"
 #include "exception/exceptions.h"
+#include "FcgiComunicator.h"
 
 
 class ErrorCodeBasedException : public std::exception {
@@ -52,6 +53,8 @@ Server::Server() {
         //TODO log
         throw new InternalServerException();
     }
+
+    FcgiComunicator comunicator = FcgiComunicator();
 }
 
 void Server::listenForever() {
