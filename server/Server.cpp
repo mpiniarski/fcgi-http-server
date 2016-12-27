@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "Server.h"
 
 Server::Server() {
@@ -36,17 +37,49 @@ void Server::listenForever() {
             perror("Accept");
             exit(1);
         }
-        char* addr = inet_ntoa(clientAddr.sin_addr);
-        char buf[255] = "Hello World\n\0";
-        error = write(connectionSocket, &buf, 255);
-        if(error == -1){
-            perror("Write");
+        error = fcntl(connectionSocket, F_SETFL, O_NONBLOCK);
+        if(error == -1) {
+            perror("Set file descriptor error");
             exit(1);
         }
+
+        std::string request = receiveRequest(connectionSocket);
+        std::cout << request << std::endl;
+
+        sendHelloWorld(connectionSocket);
 
         close(connectionSocket);
     }
     close(this->tcpSocket);
+}
+
+std::string Server::receiveRequest(int connectionSocket) const {
+    int bytesReceived;
+    char buf[255];
+    bool isAnyBytesRead = false;
+    std::string request;
+    while((bytesReceived = (int) recv(connectionSocket, buf, 255, 0)) != -1 || !isAnyBytesRead) {
+        if(bytesReceived) isAnyBytesRead = true;
+        for(int i = 0; i < bytesReceived; i++) {
+            request += buf[i];
+        }
+    }
+    int error = errno;
+    if(bytesReceived == -1 && error != EAGAIN && error != EWOULDBLOCK){
+        perror("Receive fail");
+        exit(1);
+    }
+    return request;
+}
+
+void Server::sendHelloWorld(int connectionSocket) const {
+    int error;
+    char buf[255] = "Hello World\n\0";
+    error = (int) send(connectionSocket, &buf, 255, 0);
+    if(error == -1){
+        perror("Write");
+        exit(1);
+    }
 }
 
 void Server::setReuseAddr(int sock) {

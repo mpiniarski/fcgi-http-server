@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <zconf.h>
 #include <error.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <errno.h>
 
 class Server {
 public:
@@ -14,7 +17,10 @@ public:
     void listenForever();
 
 private:
-    void setReuseAddr(int sock);
     int tcpSocket;
+
+    void setReuseAddr(int sock);
+    void sendHelloWorld(int connectionSocket) const;
+    std::string receiveRequest(int connectionSocket) const;
 };
 
