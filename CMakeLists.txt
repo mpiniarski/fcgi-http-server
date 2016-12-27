@@ -8,7 +8,10 @@ set(SOURCE_FILES
         server/Server.cpp
         server/Server.h
         server/exception/exceptions.h
-        server/FcgiComunicator.cpp
-        server/FcgiComunicator.h
+        server/FcgiCommunicator.cpp
+        server/FcgiCommunicator.h
+        server/exception/exceptions.h
+        server/CommunicationSocket.cpp
+        server/CommunicationSocket.h
         )
 add_executable(fcgi_http_server ${SOURCE_FILES})

@@ -1,131 +1,78 @@
-#include <stdlib.h>
-#include <cstring>
 #include "Server.h"
-#include "exception/exceptions.h"
-#include "FcgiComunicator.h"
-
-
-class ErrorCodeBasedException : public std::exception {
-public:
-    ErrorCodeBasedException(int errorNumber) : std::exception() {
-        this->errorNumber = errorNumber;
-    }
-
-    const char *what() const throw() {
-        return strerror(errorNumber);
-    }
-
-private:
-    int errorNumber;
-};
-
-class RequestReceiveException : public ErrorCodeBasedException {
-public:
-    RequestReceiveException(int errorNumber) : ErrorCodeBasedException(errorNumber) {}
-};
-
-class ResponseSendException : public ErrorCodeBasedException {
-public:
-    ResponseSendException(int errorNumber) : ErrorCodeBasedException(errorNumber) {}
-};
+#include "FcgiCommunicator.h"
+#include <iostream>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
 
 Server::Server() {
-    int error;
+    int result;
 
-    this->tcpSocket = socket(PF_INET, SOCK_STREAM, 0);
-    setReuseAddr(this->tcpSocket);
-
+    this->listenSocket = socket(PF_INET, SOCK_STREAM, 0);
+    setReuseAddr(this->listenSocket);
     struct sockaddr_in myAddr;
     myAddr.sin_family = AF_INET;
     myAddr.sin_port = htons(8888);
     myAddr.sin_addr.s_addr = INADDR_ANY;
 
-    error = bind(this->tcpSocket, (sockaddr *) &myAddr, sizeof myAddr);
-    if (error == -1) {
-        //TODO log
-        throw new InternalServerException();
+    result = bind(this->listenSocket, (sockaddr *) &myAddr, sizeof myAddr);
+    if (result == -1) {
+        throw FatalServerException(errno);
     }
 
     int connectionSockets = 1;
-    error = listen(this->tcpSocket, connectionSockets);
-    if (error == -1) {
-        //TODO log
-        throw new InternalServerException();
+    result = listen(this->listenSocket, connectionSockets);
+    if (result == -1) {
+        throw FatalServerException(errno);
     }
 
-    FcgiComunicator comunicator = FcgiComunicator();
 }
 
 void Server::listenForever() {
     while (true) {
         struct sockaddr_in clientAddr;
         socklen_t clientAddrSize = sizeof(sockaddr_in);
-        int connectionSocket = accept(this->tcpSocket, (sockaddr *) &clientAddr, &clientAddrSize);
-        if (connectionSocket == -1) {
-            //TODO log
-            throw new InternalServerException();
+        int socketDescriptor = accept(this->listenSocket, (sockaddr *) &clientAddr, &clientAddrSize);
+        if (socketDescriptor == -1) {
+            throw FatalServerException(errno);
         }
-
+        CommunicationSocket clientSocket = CommunicationSocket(socketDescriptor);
         try {
-            std::string request = receiveRequest(connectionSocket);
-            std::cout << request << std::endl;
-
-            sendHelloWorld(connectionSocket);
+            handleRequest(clientSocket);
         }
-        catch (RequestReceiveException exception) {
-            //TODO log
-            throw new InternalServerException();
+        catch (HttpException &exception) {
+            clientSocket.sendResponse("Error: " + std::to_string(exception.getStatus()));
         }
-        catch (ResponseSendException exception){
-            //TODO log
-            throw new InternalServerException();
-        }
-
-        close(connectionSocket);
-    }
-    close(this->tcpSocket);
-}
-
-std::string Server::receiveRequest(int connectionSocket) const {
-    ssize_t bytesReceived;
-    size_t BUFF_SIZE = 255;
-    char buf[BUFF_SIZE];
-    std::string request;
-
-    bytesReceived = recv(connectionSocket, buf, BUFF_SIZE, 0);
-    if (bytesReceived > 0) {
-        for (int i = 0; i < bytesReceived; i++) {
-            request += buf[i];
-        }
-
-        if (bytesReceived == BUFF_SIZE) {
-            while (((bytesReceived = recv(connectionSocket, buf, BUFF_SIZE, MSG_DONTWAIT)) > 0)) {
-                for (int i = 0; i < bytesReceived; i++) {
-                    request += buf[i];
-                }
-            }
-            if (bytesReceived == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
-                throw new RequestReceiveException(errno);
-            }
-        }
-    } else {
-        throw new RequestReceiveException(errno);
-    }
-    return request;
-}
-
-void Server::sendHelloWorld(int connectionSocket) const {
-    int error;
-    char buf[255] = "Hello World\n\0";
-    error = (int) send(connectionSocket, &buf, 255, 0);
-    if (error == -1) {
-        throw new ResponseSendException(errno);
+        FcgiCommunicator communicator = FcgiCommunicator();
     }
 }
 
-void Server::setReuseAddr(int sock) {
-    const int one = 1;
-    int res = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
-    if (res) error(1, errno, "setsockopt failed");
+void Server::handleRequest(CommunicationSocket &socketConnection) {
+    try {
+        std::string request = socketConnection.receiveRequest();
+        std::cout << request << std::endl;
+        socketConnection.sendResponse("Hello World!");
+    }
+    catch (RequestReceiveException &exception) {
+        //TODO log
+        throw InternalServerException();
+    }
+    catch (ResponseSendException exception) {
+        //TODO log
+    }
+}
+
+
+void Server::setReuseAddr(int socketDescriptor) {
+    const int flagValue = 1;
+    int result = setsockopt(socketDescriptor, SOL_SOCKET, SO_REUSEADDR, &flagValue, sizeof(flagValue));
+    if (result == -1) {
+        throw FatalServerException(errno);
+    }
+}
+
+Server::~Server() {
+    close(listenSocket);
 }
