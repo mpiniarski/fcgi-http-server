@@ -1,6 +1,9 @@
 #include <iostream>
+#include "server/Server.h"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    Server server = Server();
+    server.listenForever();
+
     return 0;
 }
