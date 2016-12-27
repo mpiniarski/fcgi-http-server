@@ -60,13 +60,7 @@ std::string Server::receiveRequest(int connectionSocket) const {
         }
 
         if (bytesReceived == 255) {
-            int options = fcntl(connectionSocket, F_GETFL);
-            error = fcntl(connectionSocket, F_SETFL, options | O_NONBLOCK);
-            if(error == -1) {
-                perror("Set file descriptor error");
-                exit(1);
-            }
-            while((bytesReceived = (int) recv(connectionSocket, buf, 255, 0) > 0)) {
+            while(((bytesReceived = (int) recv(connectionSocket, buf, 255, MSG_DONTWAIT)) > 0)) {
                 for(int i = 0; i < bytesReceived; i++) {
                     request += buf[i];
                 }
@@ -76,15 +70,10 @@ std::string Server::receiveRequest(int connectionSocket) const {
                 perror("Receive fail");
                 exit(1);
             }
-            error = fcntl(connectionSocket, F_SETFL, options);
-            if(error == -1) {
-                perror("Set file descriptor error");
-                exit(1);
-            }
         }
     }
-    if(bytesReceived == -1){
-        perror("Receive fail");
+    else {
+        perror("First receive fail");
         exit(1);
     }
     return request;
