@@ -1,5 +1,9 @@
 #include "Server.h"
 #include <iostream>
+#include <unistd.h>
+#include <spdlog/spdlog.h>
+
+static auto logger = spdlog::stdout_color_mt("Server");
 
 Server::Server() {
     int socketDescriptor = socket(PF_INET, SOCK_STREAM, 0);
@@ -25,15 +29,15 @@ void Server::listenForever() {
 void Server::handleRequest(Socket &socketConnection) {
     try {
         std::string request = socketConnection.receiveMessage();
-        std::cout << request << std::endl;
+        logger->debug("Received request:\n{}", request);
         socketConnection.sendMessage("Hello World!");
     }
     catch (RequestReceiveException &exception) {
-        //TODO log
+        logger->error(exception.what());
         throw InternalServerException();
     }
     catch (ResponseSendException exception) {
-        //TODO log
+        logger->error(exception.what());
     }
 }
 
