@@ -26,7 +26,7 @@ FcgiCommunicator::FcgiCommunicator() {
 void FcgiCommunicator::sendRequest(const std::string &request) const {
     try {
         sendBeginRequest();
-        sendContentRequest(request);
+        sendContentRequests(request);
         sendStreamEndRequest();
     }
     catch(ResponseSendException &exception) {
@@ -35,28 +35,45 @@ void FcgiCommunicator::sendRequest(const std::string &request) const {
     }
 }
 
-void FcgiCommunicator::sendStreamEndRequest() const { sendContentRequest(""); }
+void FcgiCommunicator::sendStreamEndRequest() const { sendContentRequests(""); }
 
-void FcgiCommunicator::sendContentRequest(const std::string request) const {
-    FCGI_RequestBody body;
-    body.contentData = request;
+void FcgiCommunicator::sendContentRequests(const std::string request) const {
+    std::string::const_iterator pos = request.begin();
 
-    FCGI_Header header;
-    header.version = FCGI_VERSION_1;
-    header.type = FCGI_BEGIN_REQUEST;
-    header.requestId = FCGI_NULL_REQUEST_ID;
-    header.contentLength = body.contentData.length();
-    header.paddingLength = 0;
+    while (pos < request.end())
+    {
+        // Create a temporary string containing 65535 "null" characters
+        char requestPart[65535] = {'\0'};
 
-    FCGI_RequestRecord record = {
-            header,
-            body
-    };
+        // Make sure we co not copy beyond the end
+        std::string::const_iterator end = (pos + 65534 < request.end() ? pos + 65534 : request.end());
 
-    ssize_t bytesSent;
-    bytesSent = (int) send(tcpSocket, &record, sizeof(record), 0);
-    if (bytesSent == -1) {
-        throw ResponseSendException(errno);
+        // Do the actual copying
+        std::copy(pos, end, requestPart);
+
+        // Advance position
+        pos += 65534;
+
+        FCGI_RequestBody body;
+        body.contentData = requestPart;
+
+        FCGI_Header header;
+        header.version = FCGI_VERSION_1;
+        header.type = FCGI_BEGIN_REQUEST;
+        header.requestId = FCGI_NULL_REQUEST_ID;
+        header.contentLength = body.contentData.length();
+        header.paddingLength = 0;
+
+        FCGI_RequestRecord record = {
+                header,
+                body
+        };
+
+        ssize_t bytesSent;
+        bytesSent = (int) send(tcpSocket, &record, sizeof(record), 0);
+        if (bytesSent == -1) {
+            throw ResponseSendException(errno);
+        }
     }
 }
 

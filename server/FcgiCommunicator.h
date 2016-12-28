@@ -11,7 +11,7 @@ private:
     int tcpSocket;
 
     void sendBeginRequest() const;
-    void sendContentRequest(const std::string request) const;
+    void sendContentRequests(const std::string request) const;
     void sendStreamEndRequest() const;
 };
 

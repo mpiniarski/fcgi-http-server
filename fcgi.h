@@ -8,11 +8,7 @@
 typedef struct {
     unsigned char version;
     unsigned char type;
-//    unsigned char requestIdB1;
-//    unsigned char requestIdB0;
     uint16_t requestId;
-//    unsigned char contentLengthB1;
-//    unsigned char contentLengthB0;
     uint16_t contentLength;
     unsigned char paddingLength;
     unsigned char reserved;
