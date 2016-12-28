@@ -8,5 +8,7 @@ public:
 
 private:
     int tcpSocket;
+
+    void sendBeginRequest() const;
 };
 

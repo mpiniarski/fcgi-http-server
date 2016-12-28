@@ -2,8 +2,10 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <iostream>
 #include "FcgiCommunicator.h"
 #include "exception/exceptions.h"
+#include "../fcgi.h"
 
 FcgiCommunicator::FcgiCommunicator() {
     tcpSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -20,9 +22,41 @@ FcgiCommunicator::FcgiCommunicator() {
         throw FatalServerException(errno);
     }
 
+    try {
+        sendBeginRequest();
+    }
+    catch(ResponseSendException &exception) {
+        //TODO log
+        throw FatalServerException(errno);
+    }
+}
 
-    char buff[255] = "Hello server\n\0";
-    send(tcpSocket, buff, 14, 0);
+void FcgiCommunicator::sendBeginRequest() const {
+
+    FCGI_BeginRequestBody body;
+    body.roleB1 = 0;
+    body.roleB0 = FCGI_RESPONDER;
+    body.flags = FCGI_KEEP_CONN;
+
+    FCGI_Header header;
+    header.version = FCGI_VERSION_1;
+    header.type = FCGI_BEGIN_REQUEST;
+    header.requestIdB1 = 0;
+    header.requestIdB0 = FCGI_NULL_REQUEST_ID;
+    header.contentLengthB1 = 0;
+    header.contentLengthB0 = sizeof(body);
+    header.paddingLength = 0;
+
+    FCGI_BeginRequestRecord beginRecord = {
+            header,
+            body
+    };
+
+    ssize_t bytesSent;
+    bytesSent = (int) send(tcpSocket, &beginRecord, sizeof(beginRecord), 0);
+    if (bytesSent == -1) {
+        throw ResponseSendException(errno);
+    }
 }
 
 FcgiCommunicator::~FcgiCommunicator() {
