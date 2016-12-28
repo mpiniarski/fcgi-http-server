@@ -27,6 +27,7 @@ void FcgiCommunicator::sendRequest(const std::string &request) const {
     try {
         sendBeginRequest();
         sendContentRequest(request);
+        sendStreamEndRequest();
     }
     catch(ResponseSendException &exception) {
         //TODO log
@@ -34,7 +35,9 @@ void FcgiCommunicator::sendRequest(const std::string &request) const {
     }
 }
 
-void FcgiCommunicator::sendContentRequest(const std::string &request) const {
+void FcgiCommunicator::sendStreamEndRequest() const { sendContentRequest(""); }
+
+void FcgiCommunicator::sendContentRequest(const std::string request) const {
     FCGI_RequestBody body;
     body.contentData = request;
 
@@ -42,7 +45,7 @@ void FcgiCommunicator::sendContentRequest(const std::string &request) const {
     header.version = FCGI_VERSION_1;
     header.type = FCGI_BEGIN_REQUEST;
     header.requestId = FCGI_NULL_REQUEST_ID;
-    header.contentLength = sizeof(body);
+    header.contentLength = body.contentData.length();
     header.paddingLength = 0;
 
     FCGI_RequestRecord record = {
