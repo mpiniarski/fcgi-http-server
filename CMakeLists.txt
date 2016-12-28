@@ -11,8 +11,6 @@ set(SOURCE_FILES
         server/FcgiCommunicator.cpp
         server/FcgiCommunicator.h
         server/exception/exceptions.h
-        server/CommunicationSocket.cpp
-        server/CommunicationSocket.h
         fcgi.h
         server/Socket.cpp
         server/Socket.h
