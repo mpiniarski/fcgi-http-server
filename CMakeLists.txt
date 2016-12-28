@@ -11,7 +11,7 @@ set(SOURCE_FILES
         server/FcgiCommunicator.cpp
         server/FcgiCommunicator.h
         server/exception/exceptions.h
-        server/CommunicationSocket.cpp
-        server/CommunicationSocket.h
+        server/Socket.cpp
+        server/Socket.h
         )
 add_executable(fcgi_http_server ${SOURCE_FILES})

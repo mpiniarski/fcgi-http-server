@@ -4,21 +4,21 @@
 #include <memory.h>
 
 #include <string>
+#include <stdexcept>
 
 
 class ErrorCodeBasedException : public std::exception {
 protected:
-    ErrorCodeBasedException(std::string message, int errorNumber) : std::exception() {
-        this->message = message;
-        this->errorNumber = errorNumber;
+    ErrorCodeBasedException(std::string title, int errorNumber) : std::exception() {
+        message = title + ": " + strerror(errorNumber);
     }
 
-    const char *what() const throw() {
-        return (message + ": " + strerror(errorNumber)).c_str();
+public:
+    virtual const char *what() {
+        return message.c_str();
     }
 
 private:
-    int errorNumber;
     std::string message;
 };
 

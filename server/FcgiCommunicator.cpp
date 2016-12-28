@@ -2,7 +2,6 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <stdlib.h>
 #include "FcgiCommunicator.h"
 #include "exception/exceptions.h"
 

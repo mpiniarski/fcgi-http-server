@@ -1,20 +1,20 @@
 #pragma once
 
 
-#include "CommunicationSocket.h"
+#include "Socket.h"
 
 class Server {
 public:
     Server();
 
-    virtual ~Server();
-
     void listenForever();
 
-private:
-    int listenSocket;
 
-    void handleRequest(CommunicationSocket &socketConnection);
-    void setReuseAddr(int socketDescriptor);
+    virtual ~Server();
+
+private:
+    Socket * listenSocket = NULL;
+
+    void handleRequest(Socket &socketConnection);
 };
 
