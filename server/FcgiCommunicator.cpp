@@ -41,10 +41,8 @@ void FcgiCommunicator::sendContentRequest(const std::string &request) const {
     FCGI_Header header;
     header.version = FCGI_VERSION_1;
     header.type = FCGI_BEGIN_REQUEST;
-    header.requestIdB1 = 0;
-    header.requestIdB0 = FCGI_NULL_REQUEST_ID;
-    header.contentLengthB1 = 0;
-    header.contentLengthB0 = sizeof(body);
+    header.requestId = FCGI_NULL_REQUEST_ID;
+    header.contentLength = sizeof(body);
     header.paddingLength = 0;
 
     FCGI_RequestRecord record = {
@@ -62,17 +60,14 @@ void FcgiCommunicator::sendContentRequest(const std::string &request) const {
 void FcgiCommunicator::sendBeginRequest() const {
 
     FCGI_BeginRequestBody body;
-    body.roleB1 = 0;
-    body.roleB0 = FCGI_RESPONDER;
+    body.role = FCGI_RESPONDER;
     body.flags = FCGI_KEEP_CONN;
 
     FCGI_Header header;
     header.version = FCGI_VERSION_1;
     header.type = FCGI_BEGIN_REQUEST;
-    header.requestIdB1 = 0;
-    header.requestIdB0 = FCGI_NULL_REQUEST_ID;
-    header.contentLengthB1 = 0;
-    header.contentLengthB0 = sizeof(body);
+    header.requestId = FCGI_NULL_REQUEST_ID;
+    header.contentLength = sizeof(body);
     header.paddingLength = 0;
 
     FCGI_BeginRequestRecord beginRecord = {

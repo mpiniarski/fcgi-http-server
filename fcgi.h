@@ -8,10 +8,12 @@
 typedef struct {
     unsigned char version;
     unsigned char type;
-    unsigned char requestIdB1;
-    unsigned char requestIdB0;
-    unsigned char contentLengthB1;
-    unsigned char contentLengthB0;
+//    unsigned char requestIdB1;
+//    unsigned char requestIdB0;
+    uint16_t requestId;
+//    unsigned char contentLengthB1;
+//    unsigned char contentLengthB0;
+    uint16_t contentLength;
     unsigned char paddingLength;
     unsigned char reserved;
 } FCGI_Header;
@@ -58,8 +60,7 @@ typedef struct {
 #define FCGI_NULL_REQUEST_ID 0
 
 typedef struct {
-    unsigned char roleB1;
-    unsigned char roleB0;
+    uint16_t role;
     unsigned char flags;
     unsigned char reserved[5];
 } FCGI_BeginRequestBody;
