@@ -21,13 +21,41 @@ FcgiCommunicator::FcgiCommunicator() {
     if(socketDescriptor == -1){
         throw FatalServerException(errno);
     }
+}
 
+void FcgiCommunicator::sendRequest(const std::string &request) const {
     try {
         sendBeginRequest();
+        sendContentRequest(request);
     }
     catch(ResponseSendException &exception) {
         //TODO log
         throw FatalServerException(errno);
+    }
+}
+
+void FcgiCommunicator::sendContentRequest(const std::string &request) const {
+    FCGI_RequestBody body;
+    body.contentData = request;
+
+    FCGI_Header header;
+    header.version = FCGI_VERSION_1;
+    header.type = FCGI_BEGIN_REQUEST;
+    header.requestIdB1 = 0;
+    header.requestIdB0 = FCGI_NULL_REQUEST_ID;
+    header.contentLengthB1 = 0;
+    header.contentLengthB0 = sizeof(body);
+    header.paddingLength = 0;
+
+    FCGI_RequestRecord record = {
+            header,
+            body
+    };
+
+    ssize_t bytesSent;
+    bytesSent = (int) send(tcpSocket, &record, sizeof(record), 0);
+    if (bytesSent == -1) {
+        throw ResponseSendException(errno);
     }
 }
 

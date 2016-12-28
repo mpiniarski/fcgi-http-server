@@ -1,5 +1,9 @@
 #include "Server.h"
+#include "FcgiCommunicator.h"
 #include <iostream>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <spdlog/spdlog.h>
 
@@ -14,22 +18,23 @@ Server::Server() {
 }
 
 void Server::listenForever() {
+    FcgiCommunicator communicator = FcgiCommunicator();
     while (true) {
         Socket clientSocket = listenSocket->acceptConnection();
         try {
-            handleRequest(clientSocket);
+            handleRequest(clientSocket, communicator);
         }
         catch (HttpException &exception) {
             clientSocket.sendMessage("Error: " + std::to_string(exception.getStatus()));
         }
-//        FcgiCommunicator communicator = FcgiCommunicator();
     }
 }
 
-void Server::handleRequest(Socket &socketConnection) {
+void Server::handleRequest(Socket &socketConnection, FcgiCommunicator communicator) {
     try {
         std::string request = socketConnection.receiveMessage();
         logger->debug("Received request:\n{}", request);
+        communicator.sendRequest(request);
         socketConnection.sendMessage("Hello World!");
     }
     catch (RequestReceiveException &exception) {
@@ -44,5 +49,3 @@ void Server::handleRequest(Socket &socketConnection) {
 Server::~Server() {
     delete listenSocket;
 }
-
-

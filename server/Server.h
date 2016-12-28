@@ -2,6 +2,7 @@
 
 
 #include "Socket.h"
+#include "FcgiCommunicator.h"
 
 class Server {
 public:
@@ -15,6 +16,6 @@ public:
 private:
     Socket * listenSocket = NULL;
 
-    void handleRequest(Socket &socketConnection);
+    void handleRequest(Socket &socketConnection, FcgiCommunicator communicator);
 };
 
