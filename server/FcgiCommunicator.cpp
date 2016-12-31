@@ -6,19 +6,20 @@
 #include "FcgiCommunicator.h"
 #include "exception/exceptions.h"
 #include "../fcgi.h"
+#include "Socket.h"
 
 FcgiCommunicator::FcgiCommunicator() {
     tcpSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if(tcpSocket == -1){
+    if (tcpSocket == -1) {
         throw FatalServerException(errno);
     }
 
     struct sockaddr_in sck_addr;
     sck_addr.sin_family = AF_INET;
-    inet_aton ("127.0.0.1", &sck_addr.sin_addr);
-    sck_addr.sin_port = htons(8889);
-    int socketDescriptor = connect(tcpSocket, (struct sockaddr*) &sck_addr, sizeof sck_addr);
-    if(socketDescriptor == -1){
+    inet_aton("127.0.0.1", &sck_addr.sin_addr);
+    sck_addr.sin_port = htons(8887);
+    int socketDescriptor = connect(tcpSocket, (struct sockaddr *) &sck_addr, sizeof sck_addr);
+    if (socketDescriptor == -1) {
         throw FatalServerException(errno);
     }
 }
@@ -26,68 +27,69 @@ FcgiCommunicator::FcgiCommunicator() {
 void FcgiCommunicator::sendRequest(const std::string &request) const {
     try {
         sendBeginRequest();
-        sendContentRequests(request);
-        sendStreamEndRequest();
+        sendContentRequests(request, FCGI_STDIN);
+        sendContentRequests("", FCGI_PARAMS);
+
+        Socket socket1 = Socket(tcpSocket);
+        std::string response = socket1.receiveMessage();
+        std::cout << response;
     }
-    catch(ResponseSendException &exception) {
+    catch (ResponseSendException &exception) {
         //TODO log
         throw FatalServerException(errno);
     }
 }
 
-void FcgiCommunicator::sendStreamEndRequest() const { sendContentRequests(""); }
 
-void FcgiCommunicator::sendContentRequests(const std::string request) const {
-    std::string::const_iterator pos = request.begin();
+void FcgiCommunicator::sendContentRequests(const std::string request, unsigned char type) const {
+    unsigned long partSize = 65535;
+    for (unsigned long i = 0; i < request.length(); i += partSize) {
+        std::string contentData = request.substr(i, partSize);
 
-    while (pos < request.end())
-    {
-        // Create a temporary string containing 65535 "null" characters
-        char requestPart[65535] = {'\0'};
-
-        // Make sure we co not copy beyond the end
-        std::string::const_iterator end = (pos + 65534 < request.end() ? pos + 65534 : request.end());
-
-        // Do the actual copying
-        std::copy(pos, end, requestPart);
-
-        // Advance position
-        pos += 65534;
-
-        FCGI_RequestBody body;
-        body.contentData = requestPart;
 
         FCGI_Header header;
         header.version = FCGI_VERSION_1;
-        header.type = FCGI_BEGIN_REQUEST;
-        header.requestId = FCGI_NULL_REQUEST_ID;
-        header.contentLength = body.contentData.length();
+        header.type = type;
+        header.requestId = htons(1);
+        header.contentLength = htons((uint16_t) contentData.length());
         header.paddingLength = 0;
 
-        FCGI_RequestRecord record = {
-                header,
-                body
-        };
-
         ssize_t bytesSent;
-        bytesSent = (int) send(tcpSocket, &record, sizeof(record), 0);
+        bytesSent = (int) send(tcpSocket, &header, sizeof(header), 0);
         if (bytesSent == -1) {
             throw ResponseSendException(errno);
         }
+        bytesSent = (int) send(tcpSocket, contentData.c_str(), contentData.length(), 0);
+        if (bytesSent == -1) {
+            throw ResponseSendException(errno);
+        }
+    }
+    //End of stream
+    FCGI_Header header;
+    header.version = FCGI_VERSION_1;
+    header.type = type;
+    header.requestId = htons(1);
+    header.contentLength = 0;
+    header.paddingLength = 0;
+
+    ssize_t bytesSent;
+    bytesSent = (int) send(tcpSocket, &header, sizeof(header), 0);
+    if (bytesSent == -1) {
+        throw ResponseSendException(errno);
     }
 }
 
 void FcgiCommunicator::sendBeginRequest() const {
 
     FCGI_BeginRequestBody body;
-    body.role = FCGI_RESPONDER;
+    body.role = htons(FCGI_RESPONDER);
     body.flags = FCGI_KEEP_CONN;
 
     FCGI_Header header;
     header.version = FCGI_VERSION_1;
     header.type = FCGI_BEGIN_REQUEST;
-    header.requestId = FCGI_NULL_REQUEST_ID;
-    header.contentLength = sizeof(body);
+    header.requestId = htons(1);
+    header.contentLength = htons(sizeof(body));
     header.paddingLength = 0;
 
     FCGI_BeginRequestRecord beginRecord = {

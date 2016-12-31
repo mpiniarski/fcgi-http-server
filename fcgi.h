@@ -15,7 +15,7 @@ typedef struct {
 } FCGI_Header;
 
 typedef struct {
-    std::string contentData;
+    const char* contentData;
 } FCGI_RequestBody;
 
 typedef struct {
