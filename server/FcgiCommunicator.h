@@ -1,5 +1,6 @@
 #include <string>
 #include "Socket.h"
+#include <map>
 
 #pragma once
 
@@ -17,5 +18,6 @@ private:
 
     void sendStream(const std::string request, unsigned char type) const;
 
+    void sendParameters(const std::map<std::string, std::string> parameters) const;
 };
 

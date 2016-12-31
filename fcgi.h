@@ -108,7 +108,3 @@ struct FCGI_UnknownTypeBody {
     unsigned char reserved[7];
 };
 
-struct FCGI_UnknownTypeRecord {
-    FCGI_Header header;
-    FCGI_UnknownTypeBody body;
-};

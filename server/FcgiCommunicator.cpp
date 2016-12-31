@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <iostream>
+#include <map>
 #include "FcgiCommunicator.h"
 #include "exception/exceptions.h"
 #include "../fcgi.h"
@@ -10,7 +11,7 @@
 
 FcgiCommunicator::FcgiCommunicator() {
     int socketDescriptor = socket(AF_INET, SOCK_STREAM, 0);
-    if (socketDescriptor  == -1) {
+    if (socketDescriptor == -1) {
         throw FatalServerException(errno);
     }
     communicationSocket = new Socket(socketDescriptor);
@@ -21,9 +22,13 @@ void FcgiCommunicator::sendRequest(const std::string &request) const {
     try {
         sendBeginRecord();
         sendStream(request, FCGI_STDIN);
-        sendStream("", FCGI_PARAMS);
+        std::map<std::string, std::string> parameters = std::map<std::string, std::string>();
+        sendParameters(parameters);
 
-        std::cout << communicationSocket->receiveMessage();
+        std::string response = communicationSocket->receiveMessage();
+        std::cout << response << std::flush;
+        response = communicationSocket->receiveMessage();
+        std::cout << response << std::flush;
     }
     catch (ResponseSendException &exception) {
         //TODO log
@@ -34,7 +39,7 @@ void FcgiCommunicator::sendRequest(const std::string &request) const {
 
 void FcgiCommunicator::sendBeginRecord() const {
     FCGI_BeginRequestBody body = FCGI_BeginRequestBody(FCGI_RESPONDER, FCGI_KEEP_CONN);
-    FCGI_Header header = FCGI_Header(FCGI_BEGIN_REQUEST,1,sizeof(body),0);
+    FCGI_Header header = FCGI_Header(FCGI_BEGIN_REQUEST, 1, sizeof(body), 0);
     communicationSocket->sendMessage(&header, sizeof(header));
     communicationSocket->sendMessage(&body, sizeof(body));
 }
@@ -43,15 +48,26 @@ void FcgiCommunicator::sendStream(const std::string request, unsigned char type)
     unsigned long partSize = 65535;
     for (unsigned long i = 0; i < request.length(); i += partSize) {
         std::string contentData = request.substr(i, partSize);
-        FCGI_Header header = FCGI_Header(type,1,(uint16_t) contentData.length(),0);
+        FCGI_Header header = FCGI_Header(type, 1, (uint16_t) contentData.length(), 0);
         communicationSocket->sendMessage(&header, sizeof(header));
         communicationSocket->sendMessage(contentData);
     }
-    FCGI_Header header = FCGI_Header(type,1,0,0);
+    FCGI_Header header = FCGI_Header(type, 1, 0, 0);
     communicationSocket->sendMessage(&header, sizeof(header));
 }
 
+void FcgiCommunicator::sendParameters(const std::map<std::string, std::string> parameters) const {
+    std::string contentData = "";
+    for (auto param : parameters) {
+        contentData += std::to_string((uint32_t) param.first.length());
+        contentData += std::to_string((uint32_t) param.second.length());
+        contentData += param.first;
+        contentData += param.second;
+    }
+    sendStream(contentData,FCGI_PARAMS);
+}
+
 FcgiCommunicator::~FcgiCommunicator() {
-    delete(communicationSocket);
+    delete (communicationSocket);
 }
 
