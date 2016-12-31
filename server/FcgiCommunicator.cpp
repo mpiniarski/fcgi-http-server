@@ -9,30 +9,21 @@
 #include "Socket.h"
 
 FcgiCommunicator::FcgiCommunicator() {
-    tcpSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (tcpSocket == -1) {
+    int socketDescriptor = socket(AF_INET, SOCK_STREAM, 0);
+    if (socketDescriptor  == -1) {
         throw FatalServerException(errno);
     }
-
-    struct sockaddr_in sck_addr;
-    sck_addr.sin_family = AF_INET;
-    inet_aton("127.0.0.1", &sck_addr.sin_addr);
-    sck_addr.sin_port = htons(8887);
-    int socketDescriptor = connect(tcpSocket, (struct sockaddr *) &sck_addr, sizeof sck_addr);
-    if (socketDescriptor == -1) {
-        throw FatalServerException(errno);
-    }
+    communicationSocket = new Socket(socketDescriptor);
+    communicationSocket->connectWith("127.0.0.1", 8887);
 }
 
 void FcgiCommunicator::sendRequest(const std::string &request) const {
     try {
-        sendBeginRequest();
-        sendContentRequests(request, FCGI_STDIN);
-        sendContentRequests("", FCGI_PARAMS);
+        sendBeginRecord();
+        sendStream(request, FCGI_STDIN);
+        sendStream("", FCGI_PARAMS);
 
-        Socket socket1 = Socket(tcpSocket);
-        std::string response = socket1.receiveMessage();
-        std::cout << response;
+        std::cout << communicationSocket->receiveMessage();
     }
     catch (ResponseSendException &exception) {
         //TODO log
@@ -41,70 +32,26 @@ void FcgiCommunicator::sendRequest(const std::string &request) const {
 }
 
 
-void FcgiCommunicator::sendContentRequests(const std::string request, unsigned char type) const {
+void FcgiCommunicator::sendBeginRecord() const {
+    FCGI_BeginRequestBody body = FCGI_BeginRequestBody(FCGI_RESPONDER, FCGI_KEEP_CONN);
+    FCGI_Header header = FCGI_Header(FCGI_BEGIN_REQUEST,1,sizeof(body),0);
+    communicationSocket->sendMessage(&header, sizeof(header));
+    communicationSocket->sendMessage(&body, sizeof(body));
+}
+
+void FcgiCommunicator::sendStream(const std::string request, unsigned char type) const {
     unsigned long partSize = 65535;
     for (unsigned long i = 0; i < request.length(); i += partSize) {
         std::string contentData = request.substr(i, partSize);
-
-
-        FCGI_Header header;
-        header.version = FCGI_VERSION_1;
-        header.type = type;
-        header.requestId = htons(1);
-        header.contentLength = htons((uint16_t) contentData.length());
-        header.paddingLength = 0;
-
-        ssize_t bytesSent;
-        bytesSent = (int) send(tcpSocket, &header, sizeof(header), 0);
-        if (bytesSent == -1) {
-            throw ResponseSendException(errno);
-        }
-        bytesSent = (int) send(tcpSocket, contentData.c_str(), contentData.length(), 0);
-        if (bytesSent == -1) {
-            throw ResponseSendException(errno);
-        }
+        FCGI_Header header = FCGI_Header(type,1,(uint16_t) contentData.length(),0);
+        communicationSocket->sendMessage(&header, sizeof(header));
+        communicationSocket->sendMessage(contentData);
     }
-    //End of stream
-    FCGI_Header header;
-    header.version = FCGI_VERSION_1;
-    header.type = type;
-    header.requestId = htons(1);
-    header.contentLength = 0;
-    header.paddingLength = 0;
-
-    ssize_t bytesSent;
-    bytesSent = (int) send(tcpSocket, &header, sizeof(header), 0);
-    if (bytesSent == -1) {
-        throw ResponseSendException(errno);
-    }
-}
-
-void FcgiCommunicator::sendBeginRequest() const {
-
-    FCGI_BeginRequestBody body;
-    body.role = htons(FCGI_RESPONDER);
-    body.flags = FCGI_KEEP_CONN;
-
-    FCGI_Header header;
-    header.version = FCGI_VERSION_1;
-    header.type = FCGI_BEGIN_REQUEST;
-    header.requestId = htons(1);
-    header.contentLength = htons(sizeof(body));
-    header.paddingLength = 0;
-
-    FCGI_BeginRequestRecord beginRecord = {
-            header,
-            body
-    };
-
-    ssize_t bytesSent;
-    bytesSent = (int) send(tcpSocket, &beginRecord, sizeof(beginRecord), 0);
-    if (bytesSent == -1) {
-        throw ResponseSendException(errno);
-    }
+    FCGI_Header header = FCGI_Header(type,1,0,0);
+    communicationSocket->sendMessage(&header, sizeof(header));
 }
 
 FcgiCommunicator::~FcgiCommunicator() {
-    close(tcpSocket);
+    delete(communicationSocket);
 }
 

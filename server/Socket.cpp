@@ -92,3 +92,14 @@ Socket Socket::acceptConnection(sockaddr_in *addrPtr, socklen_t *addrLenPtr) {
 Socket::~Socket() {
     close(socketDescriptor);
 }
+
+void Socket::connectWith(std::string address, uint16_t port) {
+    struct sockaddr_in sck_addr;
+    sck_addr.sin_family = AF_INET;
+    inet_aton(address.c_str(), &sck_addr.sin_addr);
+    sck_addr.sin_port = htons(port);
+    int result = connect(socketDescriptor, (struct sockaddr *) &sck_addr, sizeof sck_addr);
+    if (result == -1) {
+        throw FatalServerException(errno);
+    }
+}

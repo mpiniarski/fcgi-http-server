@@ -5,24 +5,6 @@
  */
 #define FCGI_LISTENSOCK_FILENO 0
 
-typedef struct {
-    unsigned char version;
-    unsigned char type;
-    uint16_t requestId;
-    uint16_t contentLength;
-    unsigned char paddingLength;
-    unsigned char reserved;
-} FCGI_Header;
-
-typedef struct {
-    const char* contentData;
-} FCGI_RequestBody;
-
-typedef struct {
-    FCGI_Header header;
-    FCGI_RequestBody body;
-} FCGI_RequestRecord;
-
 /*
  * Number of bytes in a FCGI_Header.  Future versions of the protocol
  * will not reduce this number.
@@ -55,17 +37,6 @@ typedef struct {
  */
 #define FCGI_NULL_REQUEST_ID 0
 
-typedef struct {
-    uint16_t role;
-    unsigned char flags;
-    unsigned char reserved[5];
-} FCGI_BeginRequestBody;
-
-typedef struct {
-    FCGI_Header header;
-    FCGI_BeginRequestBody body;
-} FCGI_BeginRequestRecord;
-
 /*
  * Mask for flags component of FCGI_BeginRequestBody
  */
@@ -77,20 +48,6 @@ typedef struct {
 #define FCGI_RESPONDER 1
 #define FCGI_AUTHORIZER 2
 #define FCGI_FILTER 3
-
-typedef struct {
-    unsigned char appStatusB3;
-    unsigned char appStatusB2;
-    unsigned char appStatusB1;
-    unsigned char appStatusB0;
-    unsigned char protocolStatus;
-    unsigned char reserved[3];
-} FCGI_EndRequestBody;
-
-typedef struct {
-    FCGI_Header header;
-    FCGI_EndRequestBody body;
-} FCGI_EndRequestRecord;
 
 /*
  * Values for protocolStatus component of FCGI_EndRequestBody
@@ -107,12 +64,51 @@ typedef struct {
 #define FCGI_MAX_REQS "FCGI_MAX_REQS"
 #define FCGI_MPXS_CONNS "FCGI_MPXS_CONNS"
 
-typedef struct {
+struct FCGI_Header {
+    unsigned char version;
+    unsigned char type;
+    uint16_t requestId;
+    uint16_t contentLength;
+    uint8_t paddingLength;
+    unsigned char reserved;
+
+    FCGI_Header(unsigned char type, uint16_t requestId, uint16_t contentLength, uint8_t paddingLength) :
+            version(FCGI_VERSION_1),
+            type(type),
+            paddingLength(paddingLength) {
+        this->requestId = htons(requestId);
+        this->contentLength = htons(contentLength);
+    }
+};
+
+struct FCGI_BeginRequestBody {
+    uint16_t role;
+    unsigned char flags;
+    unsigned char reserved[5];
+
+    FCGI_BeginRequestBody(uint16_t role, unsigned char flags) :
+            flags(flags) {
+        this->role = htons(role);
+    }
+};
+
+
+struct FCGI_EndRequestBody {
+    unsigned char appStatusB3;
+    unsigned char appStatusB2;
+    unsigned char appStatusB1;
+    unsigned char appStatusB0;
+    unsigned char protocolStatus;
+    unsigned char reserved[3];
+};
+
+
+struct FCGI_UnknownTypeBody {
     unsigned char type;
     unsigned char reserved[7];
-} FCGI_UnknownTypeBody;
+};
 
-typedef struct {
+struct FCGI_UnknownTypeRecord {
     FCGI_Header header;
     FCGI_UnknownTypeBody body;
-} FCGI_UnknownTypeRecord;
+};
