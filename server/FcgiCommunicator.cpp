@@ -10,12 +10,14 @@
 #include "Socket.h"
 
 FcgiCommunicator::FcgiCommunicator() {
-    int socketDescriptor = socket(AF_INET, SOCK_STREAM, 0);
-    if (socketDescriptor == -1) {
-        throw FatalServerException(errno);
+    try{
+        int socketDescriptor = socket(AF_INET, SOCK_STREAM, 0);
+        communicationSocket = new Socket(socketDescriptor);
+        communicationSocket->connectWith("127.0.0.1", 8887);
     }
-    communicationSocket = new Socket(socketDescriptor);
-    communicationSocket->connectWith("127.0.0.1", 8887);
+    catch (SocketException& exception){
+        throw FatalServerException(exception);
+    }
 }
 
 void FcgiCommunicator::sendRequest(const std::string &request) const {
@@ -25,12 +27,10 @@ void FcgiCommunicator::sendRequest(const std::string &request) const {
         std::map<std::string, std::string> parameters = std::map<std::string, std::string>();
         sendParameters(parameters);
     }
-    catch (ResponseSendException &exception) {
-        //TODO log
-        throw FatalServerException(errno);
+    catch (SocketResponseSendException &exception) {
+        throw FatalServerException(exception);
     }
 }
-
 
 void FcgiCommunicator::sendBeginRecord() const {
     FCGI_BeginRequestBody body = FCGI_BeginRequestBody(FCGI_RESPONDER, FCGI_KEEP_CONN);

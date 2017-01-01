@@ -19,7 +19,7 @@ public:
 
     void setReuseAddr();
 
-    void bindToLocalhost(uint16_t port);
+    void bindTo(uint16_t port);
 
     void setListen(int queueSize);
 
