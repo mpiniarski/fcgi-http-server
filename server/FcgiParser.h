@@ -1,5 +1,6 @@
 #include <string>
 #include <map>
+#include <vector>
 
 #pragma once
 
@@ -13,7 +14,7 @@ public:
     void parseRequest(std::string request);
 
 private:
-    void parseInitialLine(std::string line);
+    std::vector<std::string> splitLines(const std::string& header, std::string separator);
 
 };
 
