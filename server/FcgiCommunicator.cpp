@@ -8,6 +8,7 @@
 #include "exception/exceptions.h"
 #include "../fcgi.h"
 #include "Socket.h"
+#include "FcgiParser.h"
 
 FcgiCommunicator::FcgiCommunicator() {
     try{
@@ -24,8 +25,9 @@ void FcgiCommunicator::sendRequest(const std::string &request) const {
     try {
         sendBeginRecord();
         sendStream(request, FCGI_STDIN);
-        std::map<std::string, std::string> parameters = std::map<std::string, std::string>();
-        sendParameters(parameters);
+        FcgiParser parser = FcgiParser();
+        FcgiRequest fcgiRequest = parser.parseRequest(request);
+        sendParameters(fcgiRequest.parameters);
     }
     catch (SocketResponseSendException &exception) {
         throw FatalServerException(exception);

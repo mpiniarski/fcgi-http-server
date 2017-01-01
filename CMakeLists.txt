@@ -14,5 +14,7 @@ set(SOURCE_FILES
         fcgi.h
         server/Socket.cpp
         server/Socket.h
+        server/FcgiParser.cpp
+        server/FcgiParser.h
         )
 add_executable(fcgi_http_server ${SOURCE_FILES})
