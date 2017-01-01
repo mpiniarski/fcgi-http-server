@@ -32,6 +32,24 @@ std::string Socket::receiveMessage() const {
     return request;
 }
 
+std::string Socket::receiveMessage(size_t size) const {
+    std::string message;
+    while(size > 0){
+        ssize_t bytesReceived;
+        char buf[size];
+        bytesReceived = recv(socketDescriptor, buf, size, 0);
+        if (bytesReceived < 0){
+            throw RequestReceiveException(errno);
+        }
+        for (int i = 0; i < bytesReceived; i++) {
+            message += buf[i];
+        }
+        size -= bytesReceived;
+    }
+    return message;
+}
+
+
 void Socket::sendMessage(std::string response) const {
     ssize_t bytesSent;
     bytesSent = (int) send(socketDescriptor, response.c_str(), response.length(), 0);

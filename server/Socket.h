@@ -15,6 +15,8 @@ public:
 
     std::string receiveMessage() const;
 
+    std::string receiveMessage(size_t size) const;
+
     void setReuseAddr();
 
     void bindToLocalhost(uint16_t port);

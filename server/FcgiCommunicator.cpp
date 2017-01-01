@@ -24,11 +24,6 @@ void FcgiCommunicator::sendRequest(const std::string &request) const {
         sendStream(request, FCGI_STDIN);
         std::map<std::string, std::string> parameters = std::map<std::string, std::string>();
         sendParameters(parameters);
-
-        std::string response = communicationSocket->receiveMessage();
-        std::cout << response << std::flush;
-        response = communicationSocket->receiveMessage();
-        std::cout << response << std::flush;
     }
     catch (ResponseSendException &exception) {
         //TODO log
@@ -64,10 +59,38 @@ void FcgiCommunicator::sendParameters(const std::map<std::string, std::string> p
         contentData += param.first;
         contentData += param.second;
     }
-    sendStream(contentData,FCGI_PARAMS);
+    sendStream(contentData, FCGI_PARAMS);
 }
 
 FcgiCommunicator::~FcgiCommunicator() {
     delete (communicationSocket);
 }
+
+FcgiResponse FcgiCommunicator::receiveResponse() {
+    FcgiResponse fcgiResponse = FcgiResponse();
+    while (1) {
+        std::string headerString = communicationSocket->receiveMessage(sizeof(FCGI_Header));
+        FCGI_Header header = FCGI_Header((void *) headerString.c_str());
+
+        std::string bodyString = communicationSocket->receiveMessage(header.contentLength);
+        std::string paddingString = communicationSocket->receiveMessage(header.paddingLength);
+        if (header.type == FCGI_END_REQUEST) {
+            FCGI_EndRequestBody *endRequestBody = (FCGI_EndRequestBody *) bodyString.c_str();
+            fcgiResponse.appStatus = endRequestBody->appStatus;
+            fcgiResponse.protocolStatus = endRequestBody->protocolStatus;
+            break;
+        } else {
+            std::string contentData = bodyString;
+            if (header.type == FCGI_STDOUT) {
+                fcgiResponse.STDOUT += contentData;
+            } else if (header.type == FCGI_STDERR) {
+                fcgiResponse.STDERR += contentData;
+            } else {
+                //TODO exception
+            }
+        }
+    }
+    return fcgiResponse;
+}
+
 

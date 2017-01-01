@@ -35,7 +35,8 @@ void Server::handleRequest(Socket &socketConnection, FcgiCommunicator communicat
         std::string request = socketConnection.receiveMessage();
         logger->debug("Received request:\n{}", request);
         communicator.sendRequest(request);
-        socketConnection.sendMessage("Hello World!");
+        FcgiResponse response = communicator.receiveResponse();
+        socketConnection.sendMessage(response.STDOUT);
     }
     catch (RequestReceiveException &exception) {
         logger->error(exception.what());

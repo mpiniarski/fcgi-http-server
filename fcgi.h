@@ -79,6 +79,12 @@ struct FCGI_Header {
         this->requestId = htons(requestId);
         this->contentLength = htons(contentLength);
     }
+
+    FCGI_Header(void *message) {
+        *this = *(FCGI_Header *) message;
+        this->contentLength = htons(this->contentLength);
+        this->requestId = htons(this->requestId);
+    }
 };
 
 struct FCGI_BeginRequestBody {
@@ -94,11 +100,8 @@ struct FCGI_BeginRequestBody {
 
 
 struct FCGI_EndRequestBody {
-    unsigned char appStatusB3;
-    unsigned char appStatusB2;
-    unsigned char appStatusB1;
-    unsigned char appStatusB0;
-    unsigned char protocolStatus;
+    uint32_t appStatus;
+    uint8_t protocolStatus;
     unsigned char reserved[3];
 };
 
