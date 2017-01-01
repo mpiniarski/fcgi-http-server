@@ -69,25 +69,18 @@ FcgiCommunicator::~FcgiCommunicator() {
 FcgiResponse FcgiCommunicator::receiveResponse() {
     FcgiResponse fcgiResponse = FcgiResponse();
     while (1) {
-        std::string headerString = communicationSocket->receiveMessage(sizeof(FCGI_Header));
-        FCGI_Header header = FCGI_Header((void *) headerString.c_str());
-
+        FCGI_Header header = FCGI_Header((void *) communicationSocket->receiveMessage(sizeof(FCGI_Header)).c_str());
         std::string bodyString = communicationSocket->receiveMessage(header.contentLength);
-        std::string paddingString = communicationSocket->receiveMessage(header.paddingLength);
-        if (header.type == FCGI_END_REQUEST) {
-            FCGI_EndRequestBody *endRequestBody = (FCGI_EndRequestBody *) bodyString.c_str();
-            fcgiResponse.appStatus = endRequestBody->appStatus;
-            fcgiResponse.protocolStatus = endRequestBody->protocolStatus;
+        communicationSocket->receiveMessage(header.paddingLength);
+        if (header.type == FCGI_STDOUT) {
+            fcgiResponse.STDOUT += bodyString;
+        } else if (header.type == FCGI_STDERR) {
+            fcgiResponse.STDERR += bodyString;
+        } else if (header.type == FCGI_END_REQUEST) {
+            FCGI_EndRequestBody endRequestBody = FCGI_EndRequestBody((void *) bodyString.c_str());
+            fcgiResponse.appStatus = endRequestBody.appStatus;
+            fcgiResponse.protocolStatus = endRequestBody.protocolStatus;
             break;
-        } else {
-            std::string contentData = bodyString;
-            if (header.type == FCGI_STDOUT) {
-                fcgiResponse.STDOUT += contentData;
-            } else if (header.type == FCGI_STDERR) {
-                fcgiResponse.STDERR += contentData;
-            } else {
-                //TODO exception
-            }
         }
     }
     return fcgiResponse;

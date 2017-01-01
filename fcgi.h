@@ -103,6 +103,11 @@ struct FCGI_EndRequestBody {
     uint32_t appStatus;
     uint8_t protocolStatus;
     unsigned char reserved[3];
+
+    FCGI_EndRequestBody(void *message) {
+        *this = *(FCGI_EndRequestBody *) message;
+        this->appStatus = htonl(this->appStatus);
+    }
 };
 
 

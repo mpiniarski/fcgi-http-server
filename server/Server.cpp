@@ -1,5 +1,6 @@
 #include "Server.h"
 #include "FcgiCommunicator.h"
+#include "../fcgi.h"
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -33,10 +34,18 @@ void Server::listenForever() {
 void Server::handleRequest(Socket &socketConnection, FcgiCommunicator communicator) {
     try {
         std::string request = socketConnection.receiveMessage();
-        logger->debug("Received request:\n{}", request);
+        logger->debug("Received request:\n\n{}", request);
         communicator.sendRequest(request);
         FcgiResponse response = communicator.receiveResponse();
-        socketConnection.sendMessage(response.STDOUT);
+        if(response.protocolStatus == FCGI_REQUEST_COMPLETE){
+            socketConnection.sendMessage(response.STDOUT);
+            if(!response.STDERR.empty()){
+                logger->warn("Fcgi errors:\n\n{}", response.STDERR);
+            }
+        }
+        else{
+            throw HttpException(503);
+        }
     }
     catch (RequestReceiveException &exception) {
         logger->error(exception.what());

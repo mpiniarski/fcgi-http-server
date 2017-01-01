@@ -9,13 +9,10 @@ public:
     Server();
 
     void listenForever();
-
-
     virtual ~Server();
 
 private:
     Socket * listenSocket = NULL;
-
     void handleRequest(Socket &socketConnection, FcgiCommunicator communicator);
 };
 
