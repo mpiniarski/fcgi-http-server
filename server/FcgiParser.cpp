@@ -5,14 +5,16 @@
 #include "FcgiParser.h"
 
 
-void FcgiParser::parseRequest(std::string request) {
+FcgiRequest FcgiParser::parseRequest(std::string request) {
     std::string splitter = "\r\n\r\n";
     std::string header = request.substr(0, request.find(splitter));
     std::string body = request.substr(request.find(splitter)+4); //+4 to avoid splitter in substring
 
     splitter = "\r\n";
     std::vector<std::string> lines = splitLines(header, splitter);
-    FcgiRequest FcgiRequest = splitParameters(lines);
+    FcgiRequest fcgiRequest = splitParameters(lines);
+    fcgiRequest.body = body;
+    return fcgiRequest;
 }
 
 std::vector<std::string> FcgiParser::splitLines(const std::string& header, std::string separator)

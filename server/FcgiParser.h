@@ -11,7 +11,7 @@ struct FcgiRequest {
 
 class FcgiParser {
 public:
-    void parseRequest(std::string request);
+    FcgiRequest parseRequest(std::string request);
 
 private:
     std::vector<std::string> splitLines(const std::string& header, std::string separator);

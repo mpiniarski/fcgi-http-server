@@ -23,10 +23,9 @@ void FcgiCommunicator::sendRequest(const std::string &request) const {
     try {
         sendBeginRecord();
         sendStream(request, FCGI_STDIN);
-        std::map<std::string, std::string> parameters = std::map<std::string, std::string>();
         FcgiParser parser = FcgiParser();
-        parser.parseRequest(request);
-        sendParameters(parameters);
+        FcgiRequest fcgiRequest = parser.parseRequest(request);
+        sendParameters(fcgiRequest.parameters);
     }
     catch (ResponseSendException &exception) {
         //TODO log
