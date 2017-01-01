@@ -15,6 +15,7 @@ public:
 
 private:
     std::vector<std::string> splitLines(const std::string& header, std::string separator);
+    FcgiRequest splitParameters(std::vector<std::string> lines);
 
 };
 

@@ -1,5 +1,7 @@
 #include <cstring>
 #include <iostream>
+#include <utility>
+#include <vector>
 #include "FcgiParser.h"
 
 
@@ -10,6 +12,7 @@ void FcgiParser::parseRequest(std::string request) {
 
     splitter = "\r\n";
     std::vector<std::string> lines = splitLines(header, splitter);
+    FcgiRequest FcgiRequest = splitParameters(lines);
 }
 
 std::vector<std::string> FcgiParser::splitLines(const std::string& header, std::string separator)
@@ -26,5 +29,17 @@ std::vector<std::string> FcgiParser::splitLines(const std::string& header, std::
     lines.push_back(header.substr(start, stop-start));
 
     return lines;
+}
+
+FcgiRequest FcgiParser::splitParameters(std::vector<std::string> lines) {
+    FcgiRequest FcgiRequest;
+    for(int i = 1; i < lines.size(); i++) {
+        std::string splitter = ": ";
+        std::string key = lines[i].substr(0, lines[i].find(splitter));
+        std::string value = lines[i].substr(lines[i].find(splitter)+2);
+
+        FcgiRequest.parameters.insert(std::pair<std::string, std::string>(key, value));
+    }
+    return FcgiRequest;
 }
 
