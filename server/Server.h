@@ -13,6 +13,6 @@ public:
 
 private:
     Socket * listenSocket = NULL;
-    void handleRequest(Socket &socketConnection, FcgiCommunicator communicator);
+    void handleRequest(Socket &socketConnection, FcgiCommunicator &communicator);
 };
 

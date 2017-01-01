@@ -31,7 +31,7 @@ void Server::listenForever() {
     }
 }
 
-void Server::handleRequest(Socket &socketConnection, FcgiCommunicator communicator) {
+void Server::handleRequest(Socket &socketConnection, FcgiCommunicator& communicator) {
     try {
         std::string request = socketConnection.receiveMessage();
         logger->debug("Received request:\n\n{}", request);
