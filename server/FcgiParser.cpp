@@ -1,6 +1,7 @@
 #include <cstring>
 #include <iostream>
 #include <utility>
+#include <algorithm>
 #include "FcgiParser.h"
 
 
@@ -36,6 +37,11 @@ void FcgiParser::convertHeadersToParameters(std::vector<std::string> lines, Fcgi
         std::string key = lines[i].substr(0, lines[i].find(splitter));
         std::string value = lines[i].substr(lines[i].find(splitter) + 2);
 
+        if(key != "Content-Type" && key != "Content-Length") {
+            key = "HTTP_" + key;
+        }
+        std::replace(key.begin(), key.end(), '-', '_');
+        std::transform(key.begin(), key.end(),key.begin(), ::toupper);
         fcgiRequest.parameters.insert(std::pair<std::string, std::string>(key, value));
     }
 }
