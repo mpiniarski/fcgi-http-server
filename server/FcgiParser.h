@@ -18,7 +18,7 @@ private:
 
     void convertHeadersToParameters(std::vector<std::string> lines, FcgiRequest &fcgiRequest);
 
-    void convertFirstLineToParameters(std::vector<std::string> words, FcgiRequest &fcgiRequest);
+    void convertFirstLineToParameters(std::string words, FcgiRequest &fcgiRequest);
 
     void convertPathToParameters(std::string path, FcgiRequest &fcgiRequest);
 };

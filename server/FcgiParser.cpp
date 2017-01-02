@@ -9,10 +9,9 @@ FcgiRequest FcgiParser::parseRequest(std::string request) {
     std::string body = request.substr(request.find("\r\n\r\n") + 4); //+4 to avoid splitter in substring
 
     std::vector<std::string> lines = split(header, "\r\n");
-    std::vector<std::string> firstLineWords = split(lines[0], " ");
     FcgiRequest fcgiRequest;
     convertHeadersToParameters(lines, fcgiRequest);
-    convertFirstLineToParameters(firstLineWords, fcgiRequest);
+    convertFirstLineToParameters(lines[0], fcgiRequest);
     fcgiRequest.body = body;
     return fcgiRequest;
 }
@@ -41,22 +40,11 @@ void FcgiParser::convertHeadersToParameters(std::vector<std::string> lines, Fcgi
     }
 }
 
-void FcgiParser::convertFirstLineToParameters(std::vector<std::string> words, FcgiRequest &fcgiRequest) {
-    for (int i = 0; i < words.size(); i++) {
-        switch (i) {
-            case 0:
-                fcgiRequest.parameters.insert(std::pair<std::string, std::string>("REQUEST_METHOD", words[i]));
-                break;
-            case 1:
-                convertPathToParameters(words[i], fcgiRequest);
-                break;
-            case 2:
-                fcgiRequest.parameters.insert(std::pair<std::string, std::string>("SERVER_PROTOCOL", words[i]));
-                break;
-            default:
-                break;
-        }
-    }
+void FcgiParser::convertFirstLineToParameters(std::string line, FcgiRequest &fcgiRequest) {
+    std::vector<std::string> words = split(line, " ");
+    fcgiRequest.parameters.insert(std::pair<std::string, std::string>("REQUEST_METHOD", words[0]));
+    convertPathToParameters(words[1], fcgiRequest);
+    fcgiRequest.parameters.insert(std::pair<std::string, std::string>("SERVER_PROTOCOL", words[2]));
 }
 
 void FcgiParser::convertPathToParameters(std::string path, FcgiRequest &fcgiRequest) {
