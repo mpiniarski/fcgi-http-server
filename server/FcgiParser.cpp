@@ -55,9 +55,15 @@ void FcgiParser::convertFirstLineToParameters(std::string line, FcgiRequest &fcg
 
 void FcgiParser::convertPathToParameters(std::string path, FcgiRequest &fcgiRequest) {
     std::string splitter = "?";
-    std::string script_name = path.substr(0, path.find(splitter));
-    fcgiRequest.parameters.insert(std::pair<std::string, std::string>("SCRIPT_NAME", script_name));
-    std::string query_string = path.substr(path.find(splitter) + 1);
-    fcgiRequest.parameters.insert(std::pair<std::string, std::string>("QUERY_STRING", query_string));
+    if(path.find(splitter) != std::string::npos) {
+        std::string script_name = path.substr(0, path.find(splitter));
+        fcgiRequest.parameters.insert(std::pair<std::string, std::string>("SCRIPT_NAME", script_name));
+        std::string query_string = path.substr(path.find(splitter) + 1);
+        fcgiRequest.parameters.insert(std::pair<std::string, std::string>("QUERY_STRING", query_string));
+    }
+    else {
+        std::string script_name = path;
+        fcgiRequest.parameters.insert(std::pair<std::string, std::string>("SCRIPT_NAME", script_name));
+    }
 }
 
