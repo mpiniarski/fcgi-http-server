@@ -1,5 +1,6 @@
 #include <iostream>
 #include "server/Server.h"
+#include "server/exception/exceptions.h"
 #include <spdlog/spdlog.h>
 
 std::string logo = "\n"

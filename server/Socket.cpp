@@ -1,4 +1,5 @@
 #include "Socket.h"
+#include "exception/exceptions.h"
 #include <unistd.h>
 #include <arpa/inet.h>
 
@@ -96,18 +97,18 @@ void Socket::setListen(int queueSize) {
     }
 }
 
-Socket Socket::acceptConnection() {
+Socket* Socket::acceptConnection() {
 //    struct sockaddr_in clientAddr;
 //    socklen_t clientAddrSize = sizeof(sockaddr_in);
     return acceptConnection(NULL, NULL);
 }
 
-Socket Socket::acceptConnection(sockaddr_in *addrPtr, socklen_t *addrLenPtr) {
+Socket* Socket::acceptConnection(sockaddr_in *addrPtr, socklen_t *addrLenPtr) {
     int acceptedSocketDescriptor = accept(socketDescriptor, (sockaddr *) addrPtr, addrLenPtr);
     if (acceptedSocketDescriptor == -1) {
         throw SocketAcceptException(errno);
     }
-    return Socket(acceptedSocketDescriptor);
+    return new Socket(acceptedSocketDescriptor);
 }
 
 void Socket::connectWith(std::string address, uint16_t port) {

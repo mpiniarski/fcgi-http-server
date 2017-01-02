@@ -1,6 +1,5 @@
 #pragma once
 
-#include "exception/exceptions.h"
 #include <string>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -23,9 +22,9 @@ public:
 
     void setListen(int queueSize);
 
-    Socket acceptConnection();
+    Socket * acceptConnection();
 
-    Socket acceptConnection(sockaddr_in *addrPtr, socklen_t *addrLenPtr);
+    Socket * acceptConnection(sockaddr_in *addrPtr, socklen_t *addrLenPtr);
 
     void connectWith(std::string address, uint16_t port);
 
@@ -33,8 +32,6 @@ public:
 
 private:
     int socketDescriptor;
-
-
 };
 
 

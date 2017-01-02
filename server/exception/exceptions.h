@@ -5,6 +5,7 @@
 
 #include <string>
 #include <stdexcept>
+#include "../HttpResponder.h"
 
 class Exception : public std::exception {
 public:
@@ -86,13 +87,13 @@ public:
 
 class HttpException : public std::exception {
 public:
-    HttpException(int status) : std::exception(), status(status) {}
+    HttpException(const HttpStatus &status) : status(status) {}
 
-    int getStatus() const {
+    const HttpStatus &getStatus() const {
         return status;
     }
 
 private:
-    int status;
+    HttpStatus status;
 };
 

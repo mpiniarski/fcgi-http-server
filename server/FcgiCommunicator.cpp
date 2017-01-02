@@ -1,14 +1,11 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <unistd.h>
-#include <arpa/inet.h>
 #include <iostream>
 #include <map>
 #include "FcgiCommunicator.h"
-#include "exception/exceptions.h"
-#include "../fcgi.h"
-#include "Socket.h"
+#include "fcgi.h"
 #include "FcgiParser.h"
+#include "exception/exceptions.h"
 
 FcgiCommunicator::FcgiCommunicator() {
     try{
@@ -30,7 +27,7 @@ void FcgiCommunicator::sendRequest(const std::string &request) const {
         sendParameters(fcgiRequest.parameters);
     }
     catch (SocketResponseSendException &exception) {
-        throw FatalServerException(exception);
+        throw HttpException(HTTP_500_INTERNAL_SERVER_ERROR);
     }
 }
 
