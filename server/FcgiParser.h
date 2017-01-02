@@ -14,9 +14,10 @@ public:
     FcgiRequest parseRequest(std::string request);
 
 private:
-    std::vector<std::string> splitLines(const std::string& header, std::string separator);
-    FcgiRequest splitParameters(std::vector<std::string> lines);
-
+    std::vector<std::string> split(const std::string &string, std::string separator);
+    void splitParameters(std::vector<std::string> lines, FcgiRequest& fcgiRequest);
+    void splitParametersFirstLine(std::vector<std::string> words, FcgiRequest& fcgiRequest);
+    void splitPath(std::string path, FcgiRequest& fcgiRequest);
 };
 
 
