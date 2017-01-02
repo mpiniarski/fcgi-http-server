@@ -14,7 +14,7 @@ struct FcgiResponse{
 class FcgiCommunicator {
 public:
     FcgiCommunicator();
-    void sendRequest(const std::string &request) const;
+    void sendRequest(const std::string &request);
     FcgiResponse receiveResponse();
 
     virtual ~FcgiCommunicator();
@@ -22,11 +22,15 @@ public:
 private:
     Socket* communicationSocket;
 
-    void sendBeginRecord() const;
+    void sendBeginRecord();
 
-    void sendStream(const std::string request, unsigned char type) const;
+    void sendStream(const std::string request, unsigned char type);
 
-    void sendParameters(const std::map<std::string, std::string> parameters) const;
+    void sendParameters(const std::map<std::string, std::string> parameters);
+
+    std::string &getString(std::string &contentData, const std::pair<const std::string, std::string> &param);
+
+    std::string toProperSizeString(uint32_t number);
 };
 
 
