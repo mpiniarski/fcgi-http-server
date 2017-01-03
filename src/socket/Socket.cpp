@@ -1,4 +1,5 @@
 #include "Socket.h"
+#include "../server/exception/exceptions.h"
 #include "exception/exceptions.h"
 #include <unistd.h>
 #include <arpa/inet.h>

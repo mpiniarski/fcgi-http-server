@@ -1,6 +1,7 @@
 #include <iostream>
 #include "server/Server.h"
 #include "server/exception/exceptions.h"
+#include "content/fcgi/FcgiContentProvider.h"
 #include <spdlog/spdlog.h>
 
 std::string logo = "\n"
@@ -17,7 +18,8 @@ int main() {
     spdlog::set_level(spdlog::level::debug);
 
     try {
-        Server server = Server();
+        ContentProvider *contentProvider = new FcgiContentProvider();
+        Server server = Server(contentProvider);
         logger->info(logo);
         logger->info("Created server at {}:{}", "localhost", "8888");
         server.listenForever();

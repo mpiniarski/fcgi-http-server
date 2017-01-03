@@ -1,36 +1,6 @@
 #pragma once
 
-#include <exception>
-#include <memory.h>
-
-#include <string>
-#include <stdexcept>
-#include "../HttpResponder.h"
-
-class Exception : public std::exception {
-public:
-    Exception(const std::string &message) : message(message) {}
-
-    virtual const char *what() {
-        return message.c_str();
-    }
-
-private:
-    std::string message;
-};
-
-
-class ErrorCodeBasedException : public Exception {
-protected:
-    ErrorCodeBasedException(std::string comment, int errorNumber) : Exception(
-            comment + ": " + strerror(errorNumber)) {}
-};
-
-class FatalServerException : public Exception {
-public:
-    FatalServerException(Exception &causedBy) : Exception(
-            "Fatal server exception caused by:\n\t" + std::string(causedBy.what())) {}
-};
+#include "../../server/exception/exceptions.h"
 
 class SocketException : public ErrorCodeBasedException {
 public:
@@ -83,17 +53,3 @@ public:
             std::string("Error while connecting to ") + address + ":" + std::to_string(port), errorNumber) {}
 
 };
-
-
-class HttpException : public std::exception {
-public:
-    HttpException(const HttpStatus &status) : status(status) {}
-
-    const HttpStatus &getStatus() const {
-        return status;
-    }
-
-private:
-    HttpStatus status;
-};
-

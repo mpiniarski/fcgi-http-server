@@ -5,7 +5,8 @@
 #include "FcgiCommunicator.h"
 #include "fcgi.h"
 #include "FcgiParser.h"
-#include "exception/exceptions.h"
+#include "../../server/exception/exceptions.h"
+#include "../../socket/exception/exceptions.h"
 
 FcgiCommunicator::FcgiCommunicator() {
     try {

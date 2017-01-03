@@ -1,13 +1,14 @@
 #include "Server.h"
-#include "fcgi.h"
-#include "exception/exceptions.h"
+#include "../socket/exception/exceptions.h"
+#include "http/HttpResponder.h"
 #include <iostream>
 #include <spdlog/spdlog.h>
 
 static auto logger = spdlog::stdout_color_mt("Server");
 
-Server::Server() {
+Server::Server(ContentProvider *dynamicContentProvider) {
     try {
+        this->dynamicContentProvider = dynamicContentProvider;
         int socketDescriptor = socket(PF_INET, SOCK_STREAM, 0);
         listenSocket = new Socket(socketDescriptor);
         listenSocket->setReuseAddr();
@@ -20,13 +21,12 @@ Server::Server() {
 }
 
 void Server::listenForever() {
-    FcgiCommunicator communicator = FcgiCommunicator();
     HttpResponder httpResponder = HttpResponder();
     Socket *clientSocket = NULL;
     while (true) {
         try {
             clientSocket = listenSocket->acceptConnection();
-            handleRequest(*clientSocket, communicator);
+            handleRequest(*clientSocket);
             delete(clientSocket);
         }
         catch (SocketException &exception) {
@@ -34,30 +34,23 @@ void Server::listenForever() {
             throw FatalServerException(exception);
         }
         catch (HttpException &exception) {
-            HttpResponse response = HttpResponse(exception.getStatus());
+            HttpResponse response = HttpResponse();
+            response.status = exception.getStatus();
             httpResponder.sendResponse(*clientSocket, response);
             delete(clientSocket);
         }
     }
 }
 
-void Server::handleRequest(Socket &socketConnection, FcgiCommunicator &communicator) {
+void Server::handleRequest(Socket &socketConnection) {
     try {
         std::string request = socketConnection.receiveMessage();
         logger->debug("Received request:\n\n{}", request);
-        communicator.sendRequest(request);
-        FcgiResponse response = communicator.receiveResponse();
-        if (response.protocolStatus == FCGI_REQUEST_COMPLETE) {
-            socketConnection.sendMessage(response.STDOUT);
-            if (!response.STDERR.empty()) {
-                logger->warn("Fcgi errors:\n\n{}", response.STDERR);
-            }
-        } else if (response.protocolStatus == FCGI_CANT_MPX_CONN || response.protocolStatus == FCGI_OVERLOADED){
-            throw HttpException(HTTP_503_SERVICE_UNAVAILABLE);
-        }
-        else if (response.protocolStatus == FCGI_UNKNOWN_ROLE){
-            throw HttpException(HTTP_500_INTERNAL_SERVER_ERROR);
-        }
+        //TODO parse request to HttpRequest + parsing exception (400?)
+        HttpRequest httpRequest = HttpRequest();
+        //TODO decide whether to use static or dynamic content provider
+        HttpResponse httpResponse = dynamicContentProvider->getResponse(httpRequest); // TODO + Exception (500?)
+        //TODO send response to client
     }
     catch (SocketResponseSendException exception) {
         logger->error(exception.what());
@@ -70,4 +63,5 @@ void Server::handleRequest(Socket &socketConnection, FcgiCommunicator &communica
 
 Server::~Server() {
     delete listenSocket;
+    delete dynamicContentProvider;
 }

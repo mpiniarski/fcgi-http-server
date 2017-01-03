@@ -1,8 +1,7 @@
+#pragma once
 #include <string>
 #include <map>
 #include <vector>
-
-#pragma once
 
 struct FcgiRequest {
     std::map<std::string, std::string> parameters;
