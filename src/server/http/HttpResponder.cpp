@@ -18,3 +18,7 @@ void HttpResponder::sendResponse(Socket &socket, HttpResponse &response) {
                      " but failed because of exception:\n\t" + exception.what());
     }
 }
+
+void HttpResponder::sendResponse(Socket &socket, std::string &response) {
+
+}

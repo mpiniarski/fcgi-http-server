@@ -8,6 +8,8 @@
 class HttpResponder {
 public:
     void sendResponse(Socket &socket, HttpResponse& response);
+
+    void sendResponse(Socket &socket, std::string& response);
 };
 
 

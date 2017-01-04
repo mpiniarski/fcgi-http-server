@@ -49,8 +49,10 @@ void Server::handleRequest(Socket &socketConnection) {
         //TODO parse request to HttpRequest + parsing exception (400?)
         HttpRequest httpRequest = HttpRequest();
         //TODO decide whether to use static or dynamic content provider
-        HttpResponse httpResponse = dynamicContentProvider->getResponse(httpRequest); // TODO + Exception (500?)
-        //TODO send response to client
+        std::string httpResponse = dynamicContentProvider->getResponse(httpRequest); // TODO + Exception (500?, 504?)
+        //TODO* validate response
+        //send response to client:
+        socketConnection.sendMessage(httpResponse);
     }
     catch (SocketResponseSendException exception) {
         logger->error(exception.what());

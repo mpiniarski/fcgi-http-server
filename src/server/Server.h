@@ -2,7 +2,7 @@
 
 
 #include "../socket/Socket.h"
-#include "../content/fcgi/FcgiCommunicator.h"
+#include "../content/fcgi/communication/FcgiCommunicator.h"
 #include "../content/ContentProvider.h"
 
 

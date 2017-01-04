@@ -5,11 +5,15 @@
 
 struct HttpStatus {
     HttpStatus(int code, const std::string &message) : code(code), message(message) {}
+
     HttpStatus() {} //TODO only to get things working - delete later
 
     int code;
     std::string message;
 };
+
+const std::string HTTP_VERSION_1_0 = "HTTP/1.0";
+const std::string HTTP_VERSION_1_1 = "HTTP/1.1";
 
 const HttpStatus HTTP_100_CONTINUE = HttpStatus(100, "Continue");
 const HttpStatus HTTP_101_SWITCHING_PROTOCOLS = HttpStatus(101, "Switching Protocols");
@@ -63,17 +67,26 @@ const HttpStatus HTTP_505_HTTP_VERSION_NOT_SUPPORTED = HttpStatus(505, "HTTP VER
 const HttpStatus HTTP_507_INSUFFICIENT_STORAGE = HttpStatus(507, "INSUFFICIENT STORAGE");
 const HttpStatus HTTP_511_NETWORK_AUTHENTICATION_REQUIRED = HttpStatus(511, "NETWORK AUTHENTICATION REQUIRED");
 
-struct HttpRequest{
+struct HttpRequest {
     std::string method;
     std::string uri;
     std::string version;
-    std::map<std::string,std::string> headers;
+    std::map<std::string, std::string> headers;
     std::string body;
 };
 
-struct HttpResponse{
+struct HttpResponse {
     std::string version;
     HttpStatus status;
-    std::map<std::string,std::string> headers;
+    std::map<std::string, std::string> headers;
     std::string body;
+
+    HttpResponse(const std::string &version,
+                 const HttpStatus &status,
+                 const std::string &body = "",
+                 const std::map<std::string, std::string> &headers = std::map<std::string, std::string>()
+    ) : version(version),
+        status(status),
+        headers(headers),
+        body(body) {}
 };

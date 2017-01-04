@@ -2,11 +2,8 @@
 #include <string>
 #include <map>
 #include <vector>
+#include "communication/FcgiCommunicator.h"
 
-struct FcgiRequest {
-    std::map<std::string, std::string> parameters;
-    std::string body;
-};
 
 class FcgiParser {
 public:

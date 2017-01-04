@@ -2,7 +2,7 @@
 
 #include <string>
 #include <map>
-#include "../../socket/Socket.h"
+#include "../../../socket/Socket.h"
 
 
 struct FcgiResponse{
@@ -12,10 +12,16 @@ struct FcgiResponse{
     uint8_t protocolStatus;
 };
 
+struct FcgiRequest {
+    std::map<std::string, std::string> parameters;
+    std::string body;
+};
+
 class FcgiCommunicator {
 public:
     FcgiCommunicator();
-    void sendRequest(const std::string &request);
+
+    void sendRequest(FcgiRequest &request);
     FcgiResponse receiveResponse();
 
     virtual ~FcgiCommunicator();

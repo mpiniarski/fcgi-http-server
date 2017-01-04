@@ -1,10 +1,18 @@
 #pragma once
 
 #include "../ContentProvider.h"
+#include "communication/FcgiCommunicator.h"
 
 class FcgiContentProvider : public ContentProvider{
 public:
-    virtual HttpResponse getResponse(HttpRequest request) override;
+    FcgiContentProvider();
+
+    virtual std::string getResponse(HttpRequest request) override;
+
+    virtual ~FcgiContentProvider();
+
+private:
+    FcgiCommunicator * fcgiCommunicator;
 
 };
 

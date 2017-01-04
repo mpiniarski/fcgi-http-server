@@ -64,7 +64,7 @@
 #define FCGI_MAX_REQS "FCGI_MAX_REQS"
 #define FCGI_MPXS_CONNS "FCGI_MPXS_CONNS"
 
-struct FCGI_Header {
+struct FCGI_Record_Header {
     unsigned char version;
     unsigned char type;
     uint16_t requestId;
@@ -72,7 +72,7 @@ struct FCGI_Header {
     uint8_t paddingLength;
     unsigned char reserved;
 
-    FCGI_Header(unsigned char type, uint16_t requestId, uint16_t contentLength, uint8_t paddingLength) :
+    FCGI_Record_Header(unsigned char type, uint16_t requestId, uint16_t contentLength, uint8_t paddingLength) :
             version(FCGI_VERSION_1),
             type(type),
             paddingLength(paddingLength) {
@@ -80,38 +80,38 @@ struct FCGI_Header {
         this->contentLength = htons(contentLength);
     }
 
-    FCGI_Header(void *message) {
-        *this = *(FCGI_Header *) message;
+    FCGI_Record_Header(void *message) {
+        *this = *(FCGI_Record_Header *) message;
         this->contentLength = htons(this->contentLength);
         this->requestId = htons(this->requestId);
     }
 };
 
-struct FCGI_BeginRequestBody {
+struct FCGI_Record_BeginRequestBody {
     uint16_t role;
     unsigned char flags;
     unsigned char reserved[5];
 
-    FCGI_BeginRequestBody(uint16_t role, unsigned char flags) :
+    FCGI_Record_BeginRequestBody(uint16_t role, unsigned char flags) :
             flags(flags) {
         this->role = htons(role);
     }
 };
 
 
-struct FCGI_EndRequestBody {
+struct FCGI_Record_EndRequestBody {
     uint32_t appStatus;
     uint8_t protocolStatus;
     unsigned char reserved[3];
 
-    FCGI_EndRequestBody(void *message) {
-        *this = *(FCGI_EndRequestBody *) message;
+    FCGI_Record_EndRequestBody(void *message) {
+        *this = *(FCGI_Record_EndRequestBody *) message;
         this->appStatus = htonl(this->appStatus);
     }
 };
 
 
-struct FCGI_UnknownTypeBody {
+struct FCGI_Record_UnknownTypeBody {
     unsigned char type;
     unsigned char reserved[7];
 };
