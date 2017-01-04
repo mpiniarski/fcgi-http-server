@@ -4,6 +4,8 @@
 #include "../socket/Socket.h"
 #include "../content/fcgi/communication/FcgiCommunicator.h"
 #include "../content/ContentProvider.h"
+#include "http/HttpParser.h"
+#include "http/HttpResponder.h"
 
 
 class Server {
@@ -14,8 +16,10 @@ public:
     virtual ~Server();
 
 private:
-    Socket * listenSocket = NULL;
+    Socket * listenSocket;
     ContentProvider *dynamicContentProvider;
+    HttpParser* httpParser;
+    HttpResponder* httpResponder;
     void handleRequest(Socket &socketConnection);
 };
 
