@@ -15,7 +15,7 @@ set(SOURCE_FILES
         src/content/fcgi/fcgi.h
         src/socket/Socket.cpp
         src/socket/Socket.h
-        src/content/fcgi/FcgiParser.cpp
+        src/server/http/HttpParser.h
         src/content/fcgi/FcgiParser.h
         src/server/http/HttpResponder.cpp src/server/http/HttpResponder.h src/content/ContentProvider.h src/server/http/http.h src/content/fcgi/FcgiContentProvider.cpp src/content/fcgi/FcgiContentProvider.h src/socket/exception/exceptions.h src/exceptions.h src/content/exceptions.h)
 add_executable(fcgi_http_server ${SOURCE_FILES})
