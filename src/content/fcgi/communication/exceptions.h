@@ -7,17 +7,17 @@ public:
     FcgiCommunicationException(const std::string &message) : Exception(message) {}
 };
 
-class FcgiCommunicationEstablishException : public Exception {
+class FcgiCommunicationEstablishException : public FcgiCommunicationException {
 public:
-    FcgiCommunicationEstablishException() : Exception("Error while establishing connection with FCGI appliaction") {}
+    FcgiCommunicationEstablishException() : FcgiCommunicationException ("Error while establishing connection with FCGI appliaction") {}
 };
 
-class FcgiCommunicationRequestSendException : public Exception {
+class FcgiCommunicationRequestSendException : public FcgiCommunicationException {
 public:
-    FcgiCommunicationRequestSendException() : Exception("Error while sending FCGI request") {}
+    FcgiCommunicationRequestSendException() : FcgiCommunicationException("Error while sending FCGI request") {}
 };
 
-class FcgiCommunicationResponseReceiveException : public Exception {
+class FcgiCommunicationResponseReceiveException : public FcgiCommunicationException {
 public:
-    FcgiCommunicationResponseReceiveException() : Exception("Error while receiving FCGI response") {}
+    FcgiCommunicationResponseReceiveException() : FcgiCommunicationException("Error while receiving FCGI response") {}
 };

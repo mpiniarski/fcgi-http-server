@@ -56,3 +56,7 @@ std::map<std::string, std::string> HttpParser::convertHeadersToMap(std::vector<s
     return headersMap;
 }
 
+std::string HttpParser::parseToStringResponse(HttpResponse httpResponse) {
+    return std::__cxx11::string();
+}
+

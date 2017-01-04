@@ -3,11 +3,17 @@
 #include "fcgi.h"
 #include "communication/exceptions.h"
 #include "../exceptions.h"
+#include "../../server/exception/exceptions.h"
 
 static auto logger = spdlog::stdout_color_mt("FCGI Content Provider");
 
 FcgiContentProvider::FcgiContentProvider() {
-    fcgiCommunicator = new FcgiCommunicator();
+    try{
+        fcgiCommunicator = new FcgiCommunicator();
+    }
+    catch(FcgiCommunicationEstablishException& exception){
+        throw FatalServerException(exception);
+    }
     fcgiParser = new FcgiParser();
     httpParser = new HttpParser();
 }
