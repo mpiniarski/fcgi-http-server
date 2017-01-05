@@ -1,6 +1,6 @@
 #include "Socket.h"
 #include "../server/exception/exceptions.h"
-#include "exception/exceptions.h"
+#include "exceptions.h"
 #include <unistd.h>
 #include <arpa/inet.h>
 
@@ -29,11 +29,11 @@ std::string Socket::receiveMessage() const {
                 }
             }
             if (bytesReceived == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
-                throw SocketRequestReceiveException(errno);
+                throw SocketMessageReceiveException(errno);
             }
         }
     } else {
-        throw SocketRequestReceiveException(errno);
+        throw SocketMessageReceiveException(errno);
     }
     return request;
 }
@@ -45,7 +45,7 @@ std::string Socket::receiveMessage(size_t size) const {
         char buf[size];
         bytesReceived = recv(socketDescriptor, buf, size, 0);
         if (bytesReceived < 0){
-            throw SocketRequestReceiveException(errno);
+            throw SocketMessageReceiveException(errno);
         }
         for (int i = 0; i < bytesReceived; i++) {
             message += buf[i];
@@ -60,7 +60,7 @@ void Socket::sendMessage(std::string response) const {
     ssize_t bytesSent;
     bytesSent = (int) send(socketDescriptor, response.c_str(), response.length(), 0);
     if (bytesSent == -1) {
-        throw SocketResponseSendException(errno);
+        throw SocketMessageSendException(errno);
     }
 }
 
@@ -68,7 +68,7 @@ void Socket::sendMessage(const void *buff, size_t size) const {
     ssize_t bytesSent;
     bytesSent = (int) send(socketDescriptor, buff, size, 0);
     if (bytesSent == -1) {
-        throw SocketResponseSendException(errno);
+        throw SocketMessageSendException(errno);
     }
 }
 

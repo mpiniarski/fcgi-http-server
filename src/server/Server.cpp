@@ -1,5 +1,5 @@
 #include "Server.h"
-#include "../socket/exception/exceptions.h"
+#include "../socket/exceptions.h"
 #include "../content/exceptions.h"
 #include <iostream>
 #include <spdlog/spdlog.h>
@@ -42,7 +42,7 @@ void Server::handleRequest(Socket &socketConnection) {
         //TODO validate response(?)
         socketConnection.sendMessage(httpResponse);
     }
-    catch (SocketResponseSendException exception) {
+    catch (SocketMessageSendException& exception) {
         logger->error(exception.what());
     }
     catch (SocketException& exception){

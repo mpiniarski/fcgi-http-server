@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../server/exception/exceptions.h"
+#include "../server/exception/exceptions.h"
 
 class SocketException : public ErrorCodeBasedException {
 public:
@@ -12,15 +12,15 @@ public:
     SocketCreateException(int errorNumber) : SocketException("Error while creating socket", errorNumber) {}
 };
 
-class SocketRequestReceiveException : public SocketException {
+class SocketMessageReceiveException : public SocketException {
 public:
-    SocketRequestReceiveException(int errorNumber) : SocketException("Error while receiving request",
+    SocketMessageReceiveException(int errorNumber) : SocketException("Error while receiving message",
                                                                      errorNumber) {}
 };
 
-class SocketResponseSendException : public SocketException {
+class SocketMessageSendException : public SocketException {
 public:
-    SocketResponseSendException(int errorNumber) : SocketException("Error while sending response", errorNumber) {}
+    SocketMessageSendException(int errorNumber) : SocketException("Error while sending message", errorNumber) {}
 };
 
 class SocketOptionsChangeException : public SocketException {

@@ -1,7 +1,7 @@
 #include <spdlog/spdlog.h>
 #include "HttpResponder.h"
 #include "../exception/exceptions.h"
-#include "../../socket/exception/exceptions.h"
+#include "../../socket/exceptions.h"
 
 static auto logger = spdlog::stdout_color_mt("HTTP Responder");
 
@@ -22,7 +22,7 @@ void HttpResponder::sendResponse(Socket &socket, std::string &response) {
     try {
         socket.sendMessage(response);
     }
-    catch (SocketResponseSendException &exception) {
+    catch (SocketMessageSendException &exception) {
         logger->warn(exception.what());
     }
 }

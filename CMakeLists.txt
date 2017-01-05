@@ -23,7 +23,7 @@ set(SOURCE_FILES
         src/server/http/http.h
         src/content/fcgi/FcgiContentProvider.cpp
         src/content/fcgi/FcgiContentProvider.h
-        src/socket/exception/exceptions.h
+        src/socket/exceptions.h
         src/exceptions.h
         src/server/http/HttpParser.cpp
         src/server/http/HttpParser.h
