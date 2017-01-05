@@ -16,7 +16,7 @@ FcgiCommunicator::FcgiCommunicator() {
         communicationSocket->connectWith("127.0.0.1", 8887);
     }
     catch (SocketException &exception) {
-        throw FcgiCommunicationEstablishException();
+        throw FcgiCommunicationEstablishException(exception);
     }
 }
 
@@ -27,7 +27,7 @@ void FcgiCommunicator::sendRequest(FcgiRequest &request) {
         sendParameters(request.parameters);
     }
     catch (SocketException &exception) {
-        throw FcgiCommunicationRequestSendException();
+        throw FcgiCommunicationRequestSendException(exception);
     }
 }
 
@@ -98,7 +98,7 @@ FcgiResponse FcgiCommunicator::receiveResponse() {
         return fcgiResponse;
     }
     catch (SocketException& exception){
-        throw FcgiCommunicationResponseReceiveException();
+        throw FcgiCommunicationResponseReceiveException(exception);
     }
 }
 

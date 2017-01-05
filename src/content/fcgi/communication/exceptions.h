@@ -5,19 +5,44 @@
 class FcgiCommunicationException : public Exception {
 public:
     FcgiCommunicationException(const std::string &message) : Exception(message) {}
+
+    FcgiCommunicationException(const std::string &message, Exception &causedBy) : Exception(message, causedBy) {}
 };
 
 class FcgiCommunicationEstablishException : public FcgiCommunicationException {
 public:
-    FcgiCommunicationEstablishException() : FcgiCommunicationException ("Error while establishing connection with FCGI appliaction") {}
+    FcgiCommunicationEstablishException() : FcgiCommunicationException(getMessage()) {}
+
+    FcgiCommunicationEstablishException(Exception &causedBy) : FcgiCommunicationException(getMessage(), causedBy) {}
+
+private:
+    std::string getMessage() {
+        return "Error while establishing connection with FCGI appliaction";
+    }
+
 };
 
 class FcgiCommunicationRequestSendException : public FcgiCommunicationException {
 public:
-    FcgiCommunicationRequestSendException() : FcgiCommunicationException("Error while sending FCGI request") {}
+    FcgiCommunicationRequestSendException() : FcgiCommunicationException(getMessage()) {}
+
+    FcgiCommunicationRequestSendException(Exception &causedBy) : FcgiCommunicationException(getMessage(), causedBy) {}
+
+private:
+    std::string getMessage() {
+        return "Error while sending FCGI request";
+    }
 };
 
 class FcgiCommunicationResponseReceiveException : public FcgiCommunicationException {
 public:
-    FcgiCommunicationResponseReceiveException() : FcgiCommunicationException("Error while receiving FCGI response") {}
+    FcgiCommunicationResponseReceiveException() : FcgiCommunicationException(getMessage()) {}
+
+    FcgiCommunicationResponseReceiveException(Exception &causedBy) :
+            FcgiCommunicationException(getMessage(), causedBy) {}
+
+private:
+    std::string getMessage() {
+        return "Error while receiving FCGI response";
+    }
 };

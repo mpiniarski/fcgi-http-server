@@ -12,7 +12,7 @@ FcgiContentProvider::FcgiContentProvider() {
         fcgiCommunicator = new FcgiCommunicator();
     }
     catch(FcgiCommunicationEstablishException& exception){
-        throw FatalServerException(exception);
+        throw ContentProviderCreatingException(exception);
     }
     fcgiParser = new FcgiParser();
     httpParser = new HttpParser();
@@ -29,7 +29,7 @@ std::string FcgiContentProvider::getResponse(HttpRequest request) {
         return generateStringHttpResponse(response);
     }
     catch (FcgiCommunicationException &exception) {
-        throw UnableToProvideContentException(request);
+        throw ContentProviderRespondingException(request, exception);
     }
 }
 

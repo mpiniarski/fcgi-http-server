@@ -5,20 +5,10 @@
 
 class FatalServerException : public Exception {
 public:
-    FatalServerException(Exception &causedBy) : Exception(
-            "Fatal server exception caused by:\n\t" + std::string(causedBy.what())) {}
-};
-
-
-class HttpException : public std::exception {
-public:
-    HttpException(const HttpStatus &status) : status(status) {}
-
-    const HttpStatus &getStatus() const {
-        return status;
-    }
-
+    FatalServerException() : Exception(getMessage()) {};
+    FatalServerException(Exception &causedBy) : Exception(getMessage(), causedBy) {};
 private:
-    HttpStatus status;
+    std::string getMessage() {
+        return "Fatal server exception";
+    }
 };
-

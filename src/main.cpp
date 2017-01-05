@@ -2,6 +2,7 @@
 #include "server/Server.h"
 #include "server/exception/exceptions.h"
 #include "content/fcgi/FcgiContentProvider.h"
+#include "content/exceptions.h"
 #include <spdlog/spdlog.h>
 
 std::string logo = "\n"
@@ -24,7 +25,7 @@ int main() {
         logger->info("Created server at {}:{}", "localhost", "8888");
         server.listenForever();
     }
-    catch (FatalServerException &exception) {
+    catch (Exception &exception) {
         logger->critical(exception.what());
         return -1;
     }

@@ -1,6 +1,5 @@
 #include "Server.h"
 #include "../socket/exception/exceptions.h"
-#include "http/HttpResponder.h"
 #include "../content/exceptions.h"
 #include <iostream>
 #include <spdlog/spdlog.h>
@@ -36,11 +35,11 @@ void Server::listenForever() {
 void Server::handleRequest(Socket &socketConnection) {
     try {
         std::string request = socketConnection.receiveMessage();
-        logger->debug("Received request:\n\n{}", request);
+        logger->debug("Received request:\n{}", request);
         HttpRequest httpRequest = httpParser->parseToHttpRequest(request); //TODO add parsing exception (400?)
         //TODO decide whether to use static or dynamic content provider
         std::string httpResponse = dynamicContentProvider->getResponse(httpRequest); // TODO add timeout exception (504?)
-        //TODO* validate response
+        //TODO validate response(?)
         socketConnection.sendMessage(httpResponse);
     }
     catch (SocketResponseSendException exception) {
@@ -51,7 +50,7 @@ void Server::handleRequest(Socket &socketConnection) {
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
         httpResponder->sendResponse(socketConnection, response);
     }
-    catch(UnableToProvideContentException& exception){
+    catch(ContentProviderRespondingException& exception){
         logger->error(exception.what());
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
         httpResponder->sendResponse(socketConnection, response);

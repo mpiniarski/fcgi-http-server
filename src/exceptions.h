@@ -8,6 +8,8 @@ class Exception : public std::exception {
 public:
     Exception(const std::string &message) : message(message) {}
 
+    Exception(const std::string &message, Exception &parent) : message(message + "\n\tCaused by: " + parent.what()) {}
+
     virtual const char *what() {
         return message.c_str();
     }
