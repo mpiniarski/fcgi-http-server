@@ -33,14 +33,14 @@ void FcgiParser::convertHeadersToParameters(std::map<std::string,std::string> he
 void FcgiParser::convertPathToParameters(std::string path, FcgiRequest &fcgiRequest) {
     std::string splitter = "?";
     if(path.find(splitter) != std::string::npos) {
-        std::string script_name = path.substr(0, path.find(splitter));
-        fcgiRequest.parameters.insert(std::pair<std::string, std::string>("SCRIPT_NAME", script_name));
+        std::string path_info = path.substr(0, path.find(splitter));
+        fcgiRequest.parameters.insert(std::pair<std::string, std::string>("PATH_INFO", path_info));
         std::string query_string = path.substr(path.find(splitter) + 1);
         fcgiRequest.parameters.insert(std::pair<std::string, std::string>("QUERY_STRING", query_string));
     }
     else {
-        std::string script_name = path;
-        fcgiRequest.parameters.insert(std::pair<std::string, std::string>("SCRIPT_NAME", script_name));
+        std::string path_info = path;
+        fcgiRequest.parameters.insert(std::pair<std::string, std::string>("PATH_INFO", path_info));
     }
 }
 
