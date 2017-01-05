@@ -6,19 +6,23 @@
 static auto logger = spdlog::stdout_color_mt("HTTP Responder");
 
 void HttpResponder::sendResponse(Socket &socket, HttpResponse &response) {
+    std::string lineSeparator = "\r\n";
     std::string httpResponse;
-    httpResponse += "HTTP/1.0 "
+    httpResponse += response.version + " "
                     + std::to_string(response.status.code) + " "
-                    + response.status.message + "\n";
-    try {
-        socket.sendMessage(httpResponse);
+                    + response.status.message + lineSeparator;
+    for(auto header : response.headers){
+        httpResponse += header.first + ": " + header.second + lineSeparator;
     }
-    catch (SocketResponseSendException &exception) {
-        logger->warn("Tried to response with status " + std::to_string(response.status.code) +
-                     " but failed because of exception:\n\t" + exception.what());
-    }
+    httpResponse += lineSeparator + response.body;
+    sendResponse(socket, httpResponse);
 }
 
 void HttpResponder::sendResponse(Socket &socket, std::string &response) {
-
+    try {
+        socket.sendMessage(response);
+    }
+    catch (SocketResponseSendException &exception) {
+        logger->warn(exception.what());
+    }
 }
