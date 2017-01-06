@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <regex>
 #include <iostream>
+#include <boost/algorithm/string.hpp>
 #include "HttpParser.h"
 #include "exceptions.h"
 
@@ -21,9 +22,11 @@ HttpRequest HttpParser::parseToHttpRequest(std::string request) {
     if(words.size() != 3) {
         throw HttpParserBadSyntaxException();
     }
-    httpRequest.method = words[0];
-    httpRequest.uri = words[1];
-    httpRequest.version = words[2];
+    else {
+        httpRequest.method = words[0];
+        httpRequest.uri = words[1];
+        httpRequest.version = words[2];
+    }
     validateRequestSyntax(httpRequest);
 
     return httpRequest;
@@ -52,13 +55,15 @@ std::map<std::string, std::string> HttpParser::convertHeadersToMap(std::vector<s
     std::map<std::string, std::string> headersMap;
 
     std::vector<std::string> headersNonMultiline;
-    //TODO multiline
     for (int i = 1; i < headers.size(); i++) {
         if(!isspace(headers[i][0])) {
             headersNonMultiline.push_back(headers[i]);
         }
         else {
-            headersNonMultiline.push_back(headers[i-1] + " " + headers[i]);    //TODO trim whitespace
+            std::string lastBunOne = headersNonMultiline.back();
+            headersNonMultiline.pop_back();
+            std::string current = boost::trim_copy(headers[i]);
+            headersNonMultiline.push_back(lastBunOne + " " + current);
         }
     }
 
