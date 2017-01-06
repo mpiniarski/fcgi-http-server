@@ -17,8 +17,6 @@ set(SOURCE_FILES
         src/socket/Socket.h
         src/content/fcgi/FcgiParser.cpp
         src/content/fcgi/FcgiParser.h
-        src/server/http/HttpResponder.cpp
-        src/server/http/HttpResponder.h
         src/content/ContentProvider.h
         src/server/http/http.h
         src/content/fcgi/FcgiContentProvider.cpp

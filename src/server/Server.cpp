@@ -16,7 +16,6 @@ Server::Server(ContentProvider *dynamicContentProvider) {
 
         this->dynamicContentProvider = dynamicContentProvider;
         this->httpParser = new HttpParser();
-        this->httpResponder = new HttpResponder();
     }
     catch (SocketException &exception) {
         throw FatalServerException(exception);
@@ -48,16 +47,26 @@ void Server::handleRequest(Socket &socketConnection) {
     catch (SocketException& exception){
         logger->error(exception.what());
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
-        httpResponder->sendResponse(socketConnection, response);
+        sendResponse(socketConnection, httpParser->parseToStringResponse(response));
     }
     catch(ContentProviderRespondingException& exception){
         logger->error(exception.what());
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
-        httpResponder->sendResponse(socketConnection, response);
+        sendResponse(socketConnection, httpParser->parseToStringResponse(response));
+    }
+}
+
+void Server::sendResponse(Socket &socket, std::string response) {
+    try {
+        socket.sendMessage(response);
+    }
+    catch (SocketMessageSendException &exception) {
+        logger->warn(exception.what());
     }
 }
 
 Server::~Server() {
     delete listenSocket;
     delete dynamicContentProvider;
+    delete httpParser;
 }

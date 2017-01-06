@@ -57,6 +57,15 @@ std::map<std::string, std::string> HttpParser::convertHeadersToMap(std::vector<s
 }
 
 std::string HttpParser::parseToStringResponse(HttpResponse httpResponse) {
-    return std::__cxx11::string();
+    std::string lineSeparator = "\r\n";
+    std::string response;
+    response += httpResponse.version + " "
+                    + std::to_string(httpResponse.status.code) + " "
+                    + httpResponse.status.message + lineSeparator;
+    for(auto header : httpResponse.headers){
+        response += header.first + ": " + header.second + lineSeparator;
+    }
+    response += lineSeparator + httpResponse.body;
+    return response;
 }
 
