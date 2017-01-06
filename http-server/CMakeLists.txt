@@ -26,5 +26,6 @@ set(SOURCE_FILES
         server/http/HttpParser.cpp
         server/http/HttpParser.h
         content/exceptions.h
+        server/http/exceptions.h
         )
 add_executable(fcgi_http_server ${SOURCE_FILES})

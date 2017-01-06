@@ -1,19 +1,30 @@
 #include <vector>
 #include <algorithm>
+#include <regex>
+#include <iostream>
 #include "HttpParser.h"
+#include "exceptions.h"
 
 HttpRequest HttpParser::parseToHttpRequest(std::string request) {
     HttpRequest httpRequest;
-    std::string header = request.substr(0, request.find("\r\n\r\n"));
-    httpRequest.body = request.substr(request.find("\r\n\r\n") + 4);
+    std::string header;
+    if(request.find("\r\n\r\n") != std::string::npos) {
+        header = request.substr(0, request.find("\r\n\r\n"));
+        httpRequest.body = request.substr(request.find("\r\n\r\n") + 4);
+    }
+    else { header = request; }
 
     std::vector<std::string> lines = split(header, "\r\n");
     httpRequest.headers = convertHeadersToMap(lines);
     std::string firstLine = lines[0];
     std::vector<std::string> words = split(firstLine, " ");
+    if(words.size() != 3) {
+        throw HttpParserBadSyntaxException();
+    }
     httpRequest.method = words[0];
     httpRequest.uri = words[1];
     httpRequest.version = words[2];
+    validateRequestSyntax(httpRequest);
 
     return httpRequest;
 }
@@ -23,11 +34,16 @@ std::vector<std::string> HttpParser::split(const std::string &string, std::strin
     std::string::size_type start = 0, stop = 0;
     while ((stop = string.find(separator, stop)) != std::string::npos) {
         std::string line(string.substr(start, stop - start));
-        strings.push_back(line);
+        if(line.length() > 0) {
+            strings.push_back(line);
+        }
         stop += separator.size();
         start = stop;
     }
-    strings.push_back(string.substr(start, stop - start));
+    std::string line(string.substr(start, stop - start));
+    if(line.length() > 0) {
+        strings.push_back(line);
+    }
 
     return strings;
 }
@@ -67,5 +83,21 @@ std::string HttpParser::parseToStringResponse(HttpResponse httpResponse) {
     }
     response += lineSeparator + httpResponse.body;
     return response;
+}
+
+void HttpParser::validateRequestSyntax(HttpRequest httpRequest) {
+    if (httpRequest.method != "GET" && httpRequest.method != "POST" && httpRequest.method != "HEAD") {
+        throw HttpParserBadSyntaxException();
+    }
+
+    std::regex pathRegex("\\/([\\w\\d\\.-]+\\/?)*(\\?([\\w\\d\\.-]+\\=[\\w\\d\\.-]+(&|;))*([\\w\\d\\.-]+\\=[\\w\\d\\.-]+))?");
+    if (!std::regex_match(httpRequest.uri, pathRegex)) {
+        throw HttpParserBadSyntaxException();
+    }
+
+    std::regex versionRegex("HTTP/1\\.(1|0)");
+    if (!std::regex_match(httpRequest.version, versionRegex)) {
+        throw HttpParserBadSyntaxException();
+    }
 }
 
