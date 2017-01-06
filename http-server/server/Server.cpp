@@ -1,6 +1,7 @@
 #include "Server.h"
 #include "../socket/exceptions.h"
 #include "../content/exceptions.h"
+#include "http/exceptions.h"
 #include <iostream>
 #include <spdlog/spdlog.h>
 
@@ -42,7 +43,12 @@ void Server::handleRequest(Socket &socketConnection) {
         //TODO validate response(?)
         socketConnection.sendMessage(httpResponse);
     }
-    catch (SocketMessageSendException &exception) {
+    catch (HttpParserException& exception) {
+        logger->error(exception.what());
+        HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_400_BAD_REQUEST);
+        sendResponse(socketConnection, httpParser->parseToStringResponse(response));
+    }
+    catch (SocketMessageSendException& exception) {
         logger->error(exception.what());
     }
     catch (SocketException &exception) {
