@@ -9,15 +9,16 @@
 #include "../../../socket/exceptions.h"
 #include "exceptions.h"
 
-FcgiCommunicator::FcgiCommunicator() {
+FcgiCommunicator::FcgiCommunicator(HostAddress &fcgiAddress) {
     try {
         int socketDescriptor = socket(AF_INET, SOCK_STREAM, 0);
         communicationSocket = new Socket(socketDescriptor);
-        communicationSocket->connectWith("127.0.0.1", 8887);
+        communicationSocket->connectWith(fcgiAddress.ip, fcgiAddress.port);
     }
     catch (SocketException &exception) {
         throw FcgiCommunicationEstablishException(exception);
     }
+
 }
 
 void FcgiCommunicator::sendRequest(FcgiRequest &request) {
@@ -30,7 +31,6 @@ void FcgiCommunicator::sendRequest(FcgiRequest &request) {
         throw FcgiCommunicationRequestSendException(exception);
     }
 }
-
 
 void FcgiCommunicator::sendBeginRecord() {
     FCGI_Record_BeginRequestBody body = FCGI_Record_BeginRequestBody(FCGI_RESPONDER, FCGI_KEEP_CONN);
@@ -64,10 +64,9 @@ void FcgiCommunicator::sendParameters(const std::map<std::string, std::string> p
 
 std::string FcgiCommunicator::toProperSizeString(uint32_t number) {
     std::string result;
-    if (number <= 127){
+    if (number <= 127) {
         result += char(number & 0xFF);
-    }
-    else{
+    } else {
         result += char((number >> 24) & 0xFF);
         result += char((number >> 16) & 0xFF);
         result += char((number >> 8) & 0xFF);
@@ -97,7 +96,7 @@ FcgiResponse FcgiCommunicator::receiveResponse() {
         }
         return fcgiResponse;
     }
-    catch (SocketException& exception){
+    catch (SocketException &exception) {
         throw FcgiCommunicationResponseReceiveException(exception);
     }
 }

@@ -6,12 +6,12 @@
 
 static auto logger = spdlog::stdout_color_mt("Server");
 
-Server::Server(ContentProvider *dynamicContentProvider) {
+Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider) {
     try {
         int socketDescriptor = socket(PF_INET, SOCK_STREAM, 0);
         listenSocket = new Socket(socketDescriptor);
         listenSocket->setReuseAddr();
-        listenSocket->bindTo(8888);
+        listenSocket->bindTo(serverAddress.ip, serverAddress.port);
         listenSocket->setListen(1);
 
         this->dynamicContentProvider = dynamicContentProvider;
@@ -20,14 +20,14 @@ Server::Server(ContentProvider *dynamicContentProvider) {
     catch (SocketException &exception) {
         throw FatalServerException(exception);
     }
+    logger->info("Created server at {}:{}", serverAddress.ip, std::to_string(serverAddress.port));
 }
 
 void Server::listenForever() {
-    Socket *clientSocket = NULL;
     while (true) {
-            clientSocket = listenSocket->acceptConnection();
-            handleRequest(*clientSocket);
-            delete(clientSocket);
+        Socket *clientSocket = listenSocket->acceptConnection();
+        handleRequest(*clientSocket);
+        delete (clientSocket);
     }
 }
 
@@ -37,19 +37,20 @@ void Server::handleRequest(Socket &socketConnection) {
         logger->debug("Received request:\n{}", request);
         HttpRequest httpRequest = httpParser->parseToHttpRequest(request); //TODO add parsing exception (400?)
         //TODO decide whether to use static or dynamic content provider
-        std::string httpResponse = dynamicContentProvider->getResponse(httpRequest); // TODO add timeout exception (504?)
+        std::string httpResponse = dynamicContentProvider->getResponse(
+                httpRequest); // TODO add timeout exception (504?)
         //TODO validate response(?)
         socketConnection.sendMessage(httpResponse);
     }
-    catch (SocketMessageSendException& exception) {
+    catch (SocketMessageSendException &exception) {
         logger->error(exception.what());
     }
-    catch (SocketException& exception){
+    catch (SocketException &exception) {
         logger->error(exception.what());
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
     }
-    catch(ContentProviderRespondingException& exception){
+    catch (ContentProviderRespondingException &exception) {
         logger->error(exception.what());
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));

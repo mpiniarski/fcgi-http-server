@@ -18,7 +18,7 @@ public:
 
     void setReuseAddr();
 
-    void bindTo(uint16_t port);
+    void bindTo(std::string &address, uint16_t port);
 
     void setListen(int queueSize);
 
@@ -32,6 +32,7 @@ public:
 
 private:
     int socketDescriptor;
+
 };
 
 

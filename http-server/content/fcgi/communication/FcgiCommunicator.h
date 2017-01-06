@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include "../../../socket/Socket.h"
+#include "../../../config/ConfigProvider.h"
 
 
 struct FcgiResponse{
@@ -19,7 +20,7 @@ struct FcgiRequest {
 
 class FcgiCommunicator {
 public:
-    FcgiCommunicator();
+    FcgiCommunicator(HostAddress& fcgiAddress);
 
     void sendRequest(FcgiRequest &request);
     FcgiResponse receiveResponse();

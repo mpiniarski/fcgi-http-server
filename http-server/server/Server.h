@@ -5,11 +5,12 @@
 #include "../content/fcgi/communication/FcgiCommunicator.h"
 #include "../content/ContentProvider.h"
 #include "http/HttpParser.h"
+#include "../config/ConfigProvider.h"
 
 
 class Server {
 public:
-    Server(ContentProvider *dynamicContentProvider);
+    Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider);
 
     void listenForever();
     virtual ~Server();

@@ -4,10 +4,11 @@
 #include "communication/FcgiCommunicator.h"
 #include "FcgiParser.h"
 #include "../../server/http/HttpParser.h"
+#include "../../config/ConfigProvider.h"
 
 class FcgiContentProvider : public ContentProvider{
 public:
-    FcgiContentProvider();
+    FcgiContentProvider(HostAddress fcgiAddress);
 
     virtual std::string getResponse(HttpRequest request) override;
 

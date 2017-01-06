@@ -80,11 +80,11 @@ void Socket::setReuseAddr() {
     }
 }
 
-void Socket::bindTo(uint16_t port) {
+void Socket::bindTo(std::string& address, uint16_t port) {
     struct sockaddr_in myAddr;
     myAddr.sin_family = AF_INET;
     myAddr.sin_port = htons(port);
-    myAddr.sin_addr.s_addr = INADDR_ANY;
+    inet_aton(address.c_str(), &myAddr.sin_addr);
     int result = bind(socketDescriptor, (sockaddr *) &myAddr, sizeof myAddr);
     if (result == -1) {
         throw SocketBindException(port, errno);

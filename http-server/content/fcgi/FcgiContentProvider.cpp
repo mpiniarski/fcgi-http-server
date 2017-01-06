@@ -7,15 +7,16 @@
 
 static auto logger = spdlog::stdout_color_mt("FCGI Content Provider");
 
-FcgiContentProvider::FcgiContentProvider() {
+FcgiContentProvider::FcgiContentProvider(HostAddress fcgiAddress) {
     try{
-        fcgiCommunicator = new FcgiCommunicator();
+        fcgiCommunicator = new FcgiCommunicator(fcgiAddress);
     }
     catch(FcgiCommunicationEstablishException& exception){
         throw ContentProviderCreatingException(exception);
     }
     fcgiParser = new FcgiParser();
     httpParser = new HttpParser();
+
 }
 
 std::string FcgiContentProvider::getResponse(HttpRequest request) {
@@ -24,7 +25,7 @@ std::string FcgiContentProvider::getResponse(HttpRequest request) {
         fcgiCommunicator->sendRequest(fcgiRequest);
         FcgiResponse response = fcgiCommunicator->receiveResponse();
         if (!response.STDERR.empty()) {
-            logger->warn("Fcgi errors for request {} {}:\n\n{}", request.method, request.uri, response.STDERR);
+            logger->warn("Fcgi errors for request {} {}:\n{}", request.method, request.uri, response.STDERR);
         }
         return generateStringHttpResponse(response);
     }

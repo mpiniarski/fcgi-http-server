@@ -2,7 +2,6 @@
 #include "server/Server.h"
 #include "server/exception/exceptions.h"
 #include "content/fcgi/FcgiContentProvider.h"
-#include "content/exceptions.h"
 #include <spdlog/spdlog.h>
 
 std::string logo = "\n"
@@ -15,14 +14,17 @@ std::string logo = "\n"
 
 static auto logger = spdlog::stdout_color_mt("HTTP FCGI Server");
 
-int main() {
-    spdlog::set_level(spdlog::level::debug);
+int main(int ac, char **av) {
+
+    logger->info(logo);
 
     try {
-        ContentProvider *contentProvider = new FcgiContentProvider();
-        Server server = Server(contentProvider);
-        logger->info(logo);
-        logger->info("Created server at {}:{}", "localhost", "8888");
+        ServerConfigProvider serverConfigProvider = ServerConfigProvider(ac, av);
+        if (serverConfigProvider.isDebug()) {
+            spdlog::set_level(spdlog::level::debug);
+        }
+        ContentProvider *contentProvider = new FcgiContentProvider(serverConfigProvider.getFcgiAppAddres());
+        Server server = Server(serverConfigProvider.getServerAddress(), contentProvider);
         server.listenForever();
     }
     catch (Exception &exception) {
