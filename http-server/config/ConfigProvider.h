@@ -5,12 +5,12 @@
 
 struct HostAddress{
     std::string ip;
-    uint16_t port;
+    int port;
 };
 
-class ServerConfigProvider {
+class ConfigProvider {
 public:
-    ServerConfigProvider(int ac, char **av);
+    ConfigProvider(int ac, char **av);
 
     const HostAddress getServerAddress();
     const HostAddress getFcgiAppAddres();

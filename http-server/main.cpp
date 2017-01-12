@@ -19,7 +19,7 @@ int main(int ac, char **av) {
     logger->info(logo);
 
     try {
-        ServerConfigProvider serverConfigProvider = ServerConfigProvider(ac, av);
+        ConfigProvider serverConfigProvider = ConfigProvider(ac, av);
         if (serverConfigProvider.isDebug()) {
             spdlog::set_level(spdlog::level::debug);
         }
