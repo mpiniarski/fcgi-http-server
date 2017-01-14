@@ -31,8 +31,14 @@ public:
 
 class SocketBindException : public SocketException {
 public:
-    SocketBindException(uint16_t port, int errorNumber) : SocketException(
-            "Error while binding to port " + std::to_string(port), errorNumber) {}
+    SocketBindException(std::string &ip, uint16_t port, int errorNumber) : SocketException(
+            "Error while binding to " + ip + ":" + std::to_string(port), errorNumber) {}
+};
+
+class IpAddressException : public SocketException {
+public:
+    IpAddressException(std::string &ip, int errorNumber) : SocketException(
+            "Ip address is not valid" + ip, errorNumber) {}
 };
 
 class SocketListenException : public SocketException {

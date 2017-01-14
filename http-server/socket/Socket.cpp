@@ -18,10 +18,7 @@ std::string Socket::receiveMessage() const {
 
     bytesReceived = recv(socketDescriptor, buf, BUFF_SIZE, 0);
     if (bytesReceived > 0) {
-        for (int i = 0; i < bytesReceived; i++) {
-            request += buf[i];
-        }
-
+        request.append(buf, (unsigned long) bytesReceived);
         if (bytesReceived == BUFF_SIZE) {
             while (((bytesReceived = recv(socketDescriptor, buf, BUFF_SIZE, MSG_DONTWAIT)) > 0)) {
                 for (int i = 0; i < bytesReceived; i++) {
@@ -47,9 +44,7 @@ std::string Socket::receiveMessage(size_t size) const {
         if (bytesReceived < 0){
             throw SocketMessageReceiveException(errno);
         }
-        for (int i = 0; i < bytesReceived; i++) {
-            message += buf[i];
-        }
+        message.append(buf, (unsigned long) bytesReceived);
         size -= bytesReceived;
     }
     return message;
@@ -81,13 +76,17 @@ void Socket::setReuseAddr() {
 }
 
 void Socket::bindTo(std::string& address, uint16_t port) {
+    int error;
     struct sockaddr_in myAddr;
     myAddr.sin_family = AF_INET;
     myAddr.sin_port = htons(port);
-    inet_aton(address.c_str(), &myAddr.sin_addr);
-    int result = bind(socketDescriptor, (sockaddr *) &myAddr, sizeof myAddr);
-    if (result == -1) {
-        throw SocketBindException(port, errno);
+    error = inet_aton(address.c_str(), &myAddr.sin_addr);
+    if(error == -1){
+        throw IpAddressException(address, errno);
+    }
+    error = bind(socketDescriptor, (sockaddr *) &myAddr, sizeof myAddr);
+    if (error == -1) {
+        throw SocketBindException(address, port, errno);
     }
 }
 
@@ -113,12 +112,16 @@ Socket* Socket::acceptConnection(sockaddr_in *addrPtr, socklen_t *addrLenPtr) {
 }
 
 void Socket::connectWith(std::string address, uint16_t port) {
+    int error;
     struct sockaddr_in sck_addr;
     sck_addr.sin_family = AF_INET;
     inet_aton(address.c_str(), &sck_addr.sin_addr);
+    if(error == -1){
+        throw IpAddressException(address, errno);
+    }
     sck_addr.sin_port = htons(port);
-    int result = connect(socketDescriptor, (struct sockaddr *) &sck_addr, sizeof sck_addr);
-    if (result == -1) {
+    error = connect(socketDescriptor, (struct sockaddr *) &sck_addr, sizeof sck_addr);
+    if (error == -1) {
         throw SocketConnectException(address, port, errno);
     }
 }
