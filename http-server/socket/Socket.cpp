@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 
 Socket::Socket(int socketDescriptor) : socketDescriptor(socketDescriptor) {
-    if(socketDescriptor == -1){
+    if (socketDescriptor == -1) {
         throw SocketCreateException(errno);
     }
 }
@@ -21,14 +21,18 @@ std::string Socket::receiveMessage() const {
         request.append(buf, (unsigned long) bytesReceived);
         if (bytesReceived == BUFF_SIZE) {
             while (((bytesReceived = recv(socketDescriptor, buf, BUFF_SIZE, MSG_DONTWAIT)) > 0)) {
-                for (int i = 0; i < bytesReceived; i++) {
-                    request += buf[i];
-                }
+                request.append(buf, (unsigned long) bytesReceived);
             }
             if (bytesReceived == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
                 throw SocketMessageReceiveException(errno);
             }
+            if (bytesReceived == 0) {
+                throw ConnectionClosedException();
+            }
         }
+    }
+    else if (bytesReceived == 0){
+        throw ConnectionClosedException();
     } else {
         throw SocketMessageReceiveException(errno);
     }
@@ -37,12 +41,15 @@ std::string Socket::receiveMessage() const {
 
 std::string Socket::receiveMessage(size_t size) const {
     std::string message;
-    while(size > 0){
+    while (size > 0) {
         ssize_t bytesReceived;
         char buf[size];
         bytesReceived = recv(socketDescriptor, buf, size, 0);
-        if (bytesReceived < 0){
+        if (bytesReceived < 0) {
             throw SocketMessageReceiveException(errno);
+        }
+        if (bytesReceived == 0) {
+            throw ConnectionClosedException();
         }
         message.append(buf, (unsigned long) bytesReceived);
         size -= bytesReceived;
@@ -52,18 +59,17 @@ std::string Socket::receiveMessage(size_t size) const {
 
 
 void Socket::sendMessage(std::string response) const {
-    ssize_t bytesSent;
-    bytesSent = (int) send(socketDescriptor, response.c_str(), response.length(), 0);
-    if (bytesSent == -1) {
-        throw SocketMessageSendException(errno);
-    }
+    sendMessage(response.c_str(), response.length());
 }
 
 void Socket::sendMessage(const void *buff, size_t size) const {
     ssize_t bytesSent;
-    bytesSent = (int) send(socketDescriptor, buff, size, 0);
-    if (bytesSent == -1) {
-        throw SocketMessageSendException(errno);
+    while (size > 0) {
+        bytesSent = (int) send(socketDescriptor, buff, size, 0);
+        if (bytesSent == -1) {
+            throw SocketMessageSendException(errno);
+        }
+        size -= bytesSent;
     }
 }
 
@@ -75,13 +81,13 @@ void Socket::setReuseAddr() {
     }
 }
 
-void Socket::bindTo(std::string& address, uint16_t port) {
+void Socket::bindTo(std::string &address, uint16_t port) {
     int error;
     struct sockaddr_in myAddr;
     myAddr.sin_family = AF_INET;
     myAddr.sin_port = htons(port);
     error = inet_aton(address.c_str(), &myAddr.sin_addr);
-    if(error == -1){
+    if (error == -1) {
         throw IpAddressException(address, errno);
     }
     error = bind(socketDescriptor, (sockaddr *) &myAddr, sizeof myAddr);
@@ -97,13 +103,11 @@ void Socket::setListen(int queueSize) {
     }
 }
 
-Socket* Socket::acceptConnection() {
-//    struct sockaddr_in clientAddr;
-//    socklen_t clientAddrSize = sizeof(sockaddr_in);
+Socket *Socket::acceptConnection() {
     return acceptConnection(NULL, NULL);
 }
 
-Socket* Socket::acceptConnection(sockaddr_in *addrPtr, socklen_t *addrLenPtr) {
+Socket *Socket::acceptConnection(sockaddr_in *addrPtr, socklen_t *addrLenPtr) {
     int acceptedSocketDescriptor = accept(socketDescriptor, (sockaddr *) addrPtr, addrLenPtr);
     if (acceptedSocketDescriptor == -1) {
         throw SocketAcceptException(errno);
@@ -116,7 +120,7 @@ void Socket::connectWith(std::string address, uint16_t port) {
     struct sockaddr_in sck_addr;
     sck_addr.sin_family = AF_INET;
     inet_aton(address.c_str(), &sck_addr.sin_addr);
-    if(error == -1){
+    if (error == -1) {
         throw IpAddressException(address, errno);
     }
     sck_addr.sin_port = htons(port);

@@ -96,6 +96,9 @@ FcgiResponse FcgiCommunicator::receiveResponse() {
         }
         return fcgiResponse;
     }
+    catch (ConnectionClosedException &exception) {
+        throw FcgiCommunicationResponseReceiveException(exception);
+    }
     catch (SocketException &exception) {
         throw FcgiCommunicationResponseReceiveException(exception);
     }

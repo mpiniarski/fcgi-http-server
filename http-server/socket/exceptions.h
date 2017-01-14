@@ -2,6 +2,11 @@
 
 #include "../server/exception/exceptions.h"
 
+class ConnectionClosedException : public Exception {
+public:
+    ConnectionClosedException() : Exception("Connection have been closed") {}
+};
+
 class SocketException : public ErrorCodeBasedException {
 public:
     SocketException(const std::string &comment, int errorNumber) : ErrorCodeBasedException(comment, errorNumber) {}

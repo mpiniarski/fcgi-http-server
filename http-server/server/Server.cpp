@@ -43,12 +43,15 @@ void Server::handleRequest(Socket &socketConnection) {
         //TODO validate response(?)
         socketConnection.sendMessage(httpResponse);
     }
-    catch (HttpParserException& exception) {
+    catch (ConnectionClosedException &exception) {
+        logger->warn(exception.what());
+    }
+    catch (HttpParserException &exception) {
         logger->error(exception.what());
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_400_BAD_REQUEST);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
     }
-    catch (SocketMessageSendException& exception) {
+    catch (SocketMessageSendException &exception) {
         logger->error(exception.what());
     }
     catch (SocketException &exception) {
