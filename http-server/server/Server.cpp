@@ -4,6 +4,7 @@
 #include "http/exceptions.h"
 #include <iostream>
 #include <spdlog/spdlog.h>
+#include <thread>
 
 static auto logger = spdlog::stdout_color_mt("Server");
 
@@ -12,7 +13,7 @@ Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvide
         int socketDescriptor = socket(PF_INET, SOCK_STREAM, 0);
         listenSocket = new Socket(socketDescriptor);
         listenSocket->setReuseAddr();
-        listenSocket->bindTo(serverAddress.ip, serverAddress.port);
+        listenSocket->bindTo(serverAddress.ip, (uint16_t) serverAddress.port);
         listenSocket->setListen(1);
 
         this->dynamicContentProvider = dynamicContentProvider;
@@ -27,8 +28,8 @@ Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvide
 void Server::listenForever() {
     while (true) {
         Socket *clientSocket = listenSocket->acceptConnection();
-        handleRequest(*clientSocket);
-        delete (clientSocket);
+        std::thread handleThread(&Server::handleRequest, this, std::ref(*clientSocket));
+        handleThread.detach();
     }
 }
 
@@ -42,6 +43,7 @@ void Server::handleRequest(Socket &socketConnection) {
                 httpRequest); // TODO add timeout exception (504?)
         //TODO validate response(?)
         socketConnection.sendMessage(httpResponse);
+        delete (&socketConnection);
     }
     catch (ConnectionClosedException &exception) {
         logger->warn(exception.what());

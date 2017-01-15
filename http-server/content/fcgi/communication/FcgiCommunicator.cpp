@@ -2,6 +2,8 @@
 #include <netinet/in.h>
 #include <iostream>
 #include <map>
+#include <thread>
+#include <zconf.h>
 #include "FcgiCommunicator.h"
 #include "../fcgi.h"
 #include "../FcgiParser.h"
@@ -13,7 +15,10 @@ FcgiCommunicator::FcgiCommunicator(HostAddress &fcgiAddress) {
     try {
         int socketDescriptor = socket(AF_INET, SOCK_STREAM, 0);
         communicationSocket = new Socket(socketDescriptor);
-        communicationSocket->connectWith(fcgiAddress.ip, fcgiAddress.port);
+        communicationSocket->connectWith(fcgiAddress.ip, (uint16_t) fcgiAddress.port);
+
+        isListening = true;
+        listener = std::thread(&FcgiCommunicator::listenForResponses, this);
     }
     catch (SocketException &exception) {
         throw FcgiCommunicationEstablishException(exception);
@@ -23,35 +28,35 @@ FcgiCommunicator::FcgiCommunicator(HostAddress &fcgiAddress) {
 
 void FcgiCommunicator::sendRequest(FcgiRequest &request) {
     try {
-        sendBeginRecord();
-        sendStream(request.body, FCGI_STDIN);
-        sendParameters(request.parameters);
+        sendBeginRecord(request.id);
+        sendStream(request.id, request.body, FCGI_STDIN);
+        sendParameters(request.id, request.parameters);
     }
     catch (SocketException &exception) {
         throw FcgiCommunicationRequestSendException(exception);
     }
 }
 
-void FcgiCommunicator::sendBeginRecord() {
+void FcgiCommunicator::sendBeginRecord(uint16_t requestId) {
     FCGI_Record_BeginRequestBody body = FCGI_Record_BeginRequestBody(FCGI_RESPONDER, FCGI_KEEP_CONN);
-    FCGI_Record_Header header = FCGI_Record_Header(FCGI_BEGIN_REQUEST, 1, sizeof(body), 0);
+    FCGI_Record_Header header = FCGI_Record_Header(FCGI_BEGIN_REQUEST, requestId, sizeof(body), 0);
     communicationSocket->sendMessage(&header, sizeof(header));
     communicationSocket->sendMessage(&body, sizeof(body));
 }
 
-void FcgiCommunicator::sendStream(const std::string request, unsigned char type) {
+void FcgiCommunicator::sendStream(uint16_t requestId, const std::string content, unsigned char type) {
     unsigned long partSize = 65535;
-    for (unsigned long i = 0; i < request.length(); i += partSize) {
-        std::string contentData = request.substr(i, partSize);
-        FCGI_Record_Header header = FCGI_Record_Header(type, 1, (uint16_t) contentData.length(), 0);
+    for (unsigned long i = 0; i < content.length(); i += partSize) {
+        std::string contentData = content.substr(i, partSize);
+        FCGI_Record_Header header = FCGI_Record_Header(type, requestId, (uint16_t) contentData.length(), 0);
         communicationSocket->sendMessage(&header, sizeof(header));
         communicationSocket->sendMessage(contentData);
     }
-    FCGI_Record_Header header = FCGI_Record_Header(type, 1, 0, 0);
+    FCGI_Record_Header header = FCGI_Record_Header(type, requestId, 0, 0);
     communicationSocket->sendMessage(&header, sizeof(header));
 }
 
-void FcgiCommunicator::sendParameters(const std::map<std::string, std::string> parameters) {
+void FcgiCommunicator::sendParameters(uint16_t requestId, const std::map<std::string, std::string> parameters) {
     std::string contentData = "";
     for (auto param : parameters) {
         contentData += toProperSizeString((uint32_t) param.first.length());
@@ -59,7 +64,7 @@ void FcgiCommunicator::sendParameters(const std::map<std::string, std::string> p
         contentData += param.first;
         contentData += param.second;
     }
-    sendStream(contentData, FCGI_PARAMS);
+    sendStream(requestId, contentData, FCGI_PARAMS);
 }
 
 std::string FcgiCommunicator::toProperSizeString(uint32_t number) {
@@ -75,36 +80,51 @@ std::string FcgiCommunicator::toProperSizeString(uint32_t number) {
     return result;
 }
 
-FcgiResponse FcgiCommunicator::receiveResponse() {
-    try {
-        FcgiResponse fcgiResponse = FcgiResponse();
-        while (1) {
+
+void FcgiCommunicator::listenForResponses() {
+    while (isListening) {
+        try {
             FCGI_Record_Header header = FCGI_Record_Header(
                     (void *) communicationSocket->receiveMessage(sizeof(FCGI_Record_Header)).c_str());
             std::string bodyString = communicationSocket->receiveMessage(header.contentLength);
             communicationSocket->receiveMessage(header.paddingLength);
+
+            FcgiResponse &response = responseMap[header.requestId];
+
             if (header.type == FCGI_STDOUT) {
-                fcgiResponse.STDOUT += bodyString;
+                response.STDOUT += bodyString;
             } else if (header.type == FCGI_STDERR) {
-                fcgiResponse.STDERR += bodyString;
+                response.STDERR += bodyString;
             } else if (header.type == FCGI_END_REQUEST) {
                 FCGI_Record_EndRequestBody endRequestBody = FCGI_Record_EndRequestBody((void *) bodyString.c_str());
-                fcgiResponse.appStatus = endRequestBody.appStatus;
-                fcgiResponse.protocolStatus = endRequestBody.protocolStatus;
-                break;
+                response.appStatus = endRequestBody.appStatus;
+                response.protocolStatus = endRequestBody.protocolStatus;
+                response.isFinished = true;
             }
         }
-        return fcgiResponse;
+        catch (ConnectionClosedException &exception) {
+            throw FcgiCommunicationResponseReceiveException(exception);
+        }
+        catch (SocketException &exception) {
+            throw FcgiCommunicationResponseReceiveException(exception);
+        }
     }
-    catch (ConnectionClosedException &exception) {
-        throw FcgiCommunicationResponseReceiveException(exception);
-    }
-    catch (SocketException &exception) {
-        throw FcgiCommunicationResponseReceiveException(exception);
+}
+
+FcgiResponse FcgiCommunicator::receiveResponse(int requestId) {
+    while (true) {
+        FcgiResponse &response = responseMap[requestId];
+        if (response.isFinished) {
+            return response;
+        } else {
+            usleep(100);
+        }
     }
 }
 
 FcgiCommunicator::~FcgiCommunicator() {
+    isListening = false;
+    listener.join();
     delete (communicationSocket);
 }
 

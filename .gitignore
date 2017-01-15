@@ -1,8 +1,10 @@
 http-server/.idea/
+http-server/Debug/
 server.config
 
 
 fcgi-app/app/.idea/
 fcgi-app/app/__pycache__/
 fcgi-app/env/
+
 

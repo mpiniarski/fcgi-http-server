@@ -8,6 +8,7 @@
 FcgiRequest FcgiParser::parseToFcgiRequest(HttpRequest httpRequest) {
     FcgiRequest fcgiRequest;
 
+    fcgiRequest.id = currId++;
     convertHeadersToParameters(httpRequest.headers, fcgiRequest);
     fcgiRequest.parameters.insert(std::pair<std::string, std::string>("REQUEST_METHOD", httpRequest.method));
     fcgiRequest.parameters.insert(std::pair<std::string, std::string>("SERVER_PROTOCOL", httpRequest.version));

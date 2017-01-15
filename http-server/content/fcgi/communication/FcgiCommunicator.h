@@ -4,6 +4,7 @@
 #include <map>
 #include "../../../socket/Socket.h"
 #include "../../../config/ConfigProvider.h"
+#include <thread>
 
 
 struct FcgiResponse{
@@ -11,9 +12,11 @@ struct FcgiResponse{
     std::string STDERR;
     uint32_t appStatus;
     uint8_t protocolStatus;
+    bool isFinished;
 };
 
 struct FcgiRequest {
+    uint16_t id;
     std::map<std::string, std::string> parameters;
     std::string body;
 };
@@ -23,18 +26,21 @@ public:
     FcgiCommunicator(HostAddress& fcgiAddress);
 
     void sendRequest(FcgiRequest &request);
-    FcgiResponse receiveResponse();
+
+    FcgiResponse receiveResponse(int requestId);
+    void listenForResponses();
 
     virtual ~FcgiCommunicator();
 
 private:
     Socket* communicationSocket;
+    bool isListening;
+    std::map<uint16_t, FcgiResponse> responseMap;
+    std::thread listener;
 
-    void sendBeginRecord();
-
-    void sendStream(const std::string request, unsigned char type);
-
-    void sendParameters(const std::map<std::string, std::string> parameters);
+    void sendBeginRecord(uint16_t requestId);
+    void sendStream(uint16_t requestId, const std::string content, unsigned char type);
+    void sendParameters(uint16_t requestId, const std::map<std::string, std::string> parameters);
 
     std::string toProperSizeString(uint32_t number);
 };

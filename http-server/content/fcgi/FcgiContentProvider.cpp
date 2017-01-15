@@ -23,7 +23,7 @@ std::string FcgiContentProvider::getResponse(HttpRequest request) {
     try {
         FcgiRequest fcgiRequest = fcgiParser->parseToFcgiRequest(request);
         fcgiCommunicator->sendRequest(fcgiRequest);
-        FcgiResponse response = fcgiCommunicator->receiveResponse();
+        FcgiResponse response = fcgiCommunicator->receiveResponse(fcgiRequest.id);
         if (!response.STDERR.empty()) {
             logger->warn("Fcgi errors for request {} {}:\n{}", request.method, request.uri, response.STDERR);
         }
