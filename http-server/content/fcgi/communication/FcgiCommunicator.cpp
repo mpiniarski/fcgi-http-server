@@ -27,77 +27,19 @@ FcgiCommunicator::FcgiCommunicator(HostAddress &fcgiAddress) {
     }
 }
 
-void FcgiCommunicator::sendRequest(FcgiRequest &request) {
-    try {
-        if(!isListening){
-            throw FcgiCommunicationClosedException();
-        }
-        sendBeginRecord(request.id);
-        sendStream(request.id, request.body, FCGI_STDIN);
-        sendParameters(request.id, request.parameters);
-    }
-    catch (SocketException &exception) {
-        throw FcgiCommunicationRequestSendException(exception);
-    }
-}
-
-void FcgiCommunicator::sendBeginRecord(uint16_t requestId) {
-    FCGI_Record_BeginRequestBody body = FCGI_Record_BeginRequestBody(FCGI_RESPONDER, FCGI_KEEP_CONN);
-    FCGI_Record_Header header = FCGI_Record_Header(FCGI_BEGIN_REQUEST, requestId, sizeof(body), 0);
-    communicationSocket->sendMessage(&header, sizeof(header));
-    communicationSocket->sendMessage(&body, sizeof(body));
-}
-
-void FcgiCommunicator::sendStream(uint16_t requestId, const std::string content, unsigned char type) {
-    unsigned long partSize = 65535;
-    for (unsigned long i = 0; i < content.length(); i += partSize) {
-        std::string contentData = content.substr(i, partSize);
-        FCGI_Record_Header header = FCGI_Record_Header(type, requestId, (uint16_t) contentData.length(), 0);
-        communicationSocket->sendMessage(&header, sizeof(header));
-        communicationSocket->sendMessage(contentData);
-    }
-    FCGI_Record_Header header = FCGI_Record_Header(type, requestId, 0, 0);
-    communicationSocket->sendMessage(&header, sizeof(header));
-}
-
-void FcgiCommunicator::sendParameters(uint16_t requestId, const std::map<std::string, std::string> parameters) {
-    std::string contentData = "";
-    for (auto param : parameters) {
-        contentData += toProperSizeString((uint32_t) param.first.length());
-        contentData += toProperSizeString((uint32_t) param.second.length());
-        contentData += param.first;
-        contentData += param.second;
-    }
-    sendStream(requestId, contentData, FCGI_PARAMS);
-}
-
-std::string FcgiCommunicator::toProperSizeString(uint32_t number) {
-    std::string result;
-    if (number <= 127) {
-        result += char(number & 0xFF);
-    } else {
-        result += char((number >> 24) & 0xFF);
-        result += char((number >> 16) & 0xFF);
-        result += char((number >> 8) & 0xFF);
-        result += char(number & 0xFF);
-    }
-    return result;
-}
-
-
 void FcgiCommunicator::listenForResponses() {
     while (isListening) {
         try {
-            manageOneRecord();
+            manageResponse();
         }
         catch (FcgiCommunicationResponseReceiveException &exception) {
-            logger->critical(exception.what());
+            logger->error(exception.what());
             isListening = false;
         }
     }
 }
 
-void FcgiCommunicator::manageOneRecord() {
+void FcgiCommunicator::manageResponse() {
     try {
         FCGI_Record_Header header = FCGI_Record_Header(
                 (void *) communicationSocket->receiveMessage(sizeof(FCGI_Record_Header)).c_str());
@@ -125,7 +67,6 @@ void FcgiCommunicator::manageOneRecord() {
     }
 }
 
-
 FcgiResponse FcgiCommunicator::receiveResponse(int requestId) {
     while (true) {
         if(!isListening){
@@ -138,6 +79,65 @@ FcgiResponse FcgiCommunicator::receiveResponse(int requestId) {
             usleep(100);
         }
     }
+}
+
+void FcgiCommunicator::sendRequest(FcgiRequest &request) {
+    try {
+        if(!isListening){
+            throw FcgiCommunicationClosedException();
+        }
+        sendBeginRecord(request.id);
+        sendStream(request.id, request.body, FCGI_STDIN);
+        sendParameters(request.id, request.parameters);
+    }
+    catch (SocketException &exception) {
+        throw FcgiCommunicationRequestSendException(exception);
+    }
+}
+
+void FcgiCommunicator::sendBeginRecord(uint16_t requestId) {
+    FCGI_Record_BeginRequestBody body = FCGI_Record_BeginRequestBody(FCGI_RESPONDER, FCGI_KEEP_CONN);
+    FCGI_Record_Header header = FCGI_Record_Header(FCGI_BEGIN_REQUEST, requestId, sizeof(body), 0);
+    communicationSocket->sendMessage(&header, sizeof(header));
+    communicationSocket->sendMessage(&body, sizeof(body));
+}
+
+
+void FcgiCommunicator::sendStream(uint16_t requestId, const std::string content, unsigned char type) {
+    unsigned long partSize = 65535;
+    for (unsigned long i = 0; i < content.length(); i += partSize) {
+        std::string contentData = content.substr(i, partSize);
+        FCGI_Record_Header header = FCGI_Record_Header(type, requestId, (uint16_t) contentData.length(), 0);
+        communicationSocket->sendMessage(&header, sizeof(header));
+        communicationSocket->sendMessage(contentData);
+    }
+    FCGI_Record_Header header = FCGI_Record_Header(type, requestId, 0, 0);
+    communicationSocket->sendMessage(&header, sizeof(header));
+}
+
+void FcgiCommunicator::sendParameters(uint16_t requestId, const std::map<std::string, std::string> parameters) {
+    std::string contentData = "";
+    for (auto param : parameters) {
+        contentData += toProperSizeString((uint32_t) param.first.length());
+        contentData += toProperSizeString((uint32_t) param.second.length());
+        contentData += param.first;
+        contentData += param.second;
+    }
+    sendStream(requestId, contentData, FCGI_PARAMS);
+}
+
+
+std::string FcgiCommunicator::toProperSizeString(uint32_t number) {
+    std::string result;
+    if (number <= 127) {
+        result += char(number & 0xFF);
+    } else {
+        result += char((number >> 24) & 0xFF);
+        result += char((number >> 16) & 0xFF);
+        result += char((number >> 8) & 0xFF);
+        result += char(number & 0xFF);
+    }
+    return result;
 }
 
 FcgiCommunicator::~FcgiCommunicator() {

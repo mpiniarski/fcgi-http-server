@@ -26,9 +26,7 @@ public:
     FcgiCommunicator(HostAddress& fcgiAddress);
 
     void sendRequest(FcgiRequest &request);
-
     FcgiResponse receiveResponse(int requestId);
-    void listenForResponses();
 
     virtual ~FcgiCommunicator();
 
@@ -41,10 +39,11 @@ private:
     void sendBeginRecord(uint16_t requestId);
     void sendStream(uint16_t requestId, const std::string content, unsigned char type);
     void sendParameters(uint16_t requestId, const std::map<std::string, std::string> parameters);
-
     std::string toProperSizeString(uint32_t number);
 
-    void manageOneRecord();
+
+    void listenForResponses();
+    void manageResponse();
 };
 
 

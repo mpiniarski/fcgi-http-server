@@ -5,9 +5,6 @@
 
 struct HttpStatus {
     HttpStatus(int code, const std::string &message) : code(code), message(message) {}
-
-    HttpStatus() {} //TODO only to get things working - delete later
-
     int code;
     std::string message;
 };

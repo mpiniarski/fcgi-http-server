@@ -11,7 +11,6 @@
 class Server {
 public:
     Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider);
-
     void listenForever();
     virtual ~Server();
 
@@ -19,9 +18,8 @@ private:
     Socket * listenSocket;
     ContentProvider *dynamicContentProvider;
     HttpParser* httpParser;
-    void handleRequest(Socket &socketConnection);
     void sendResponse(Socket &socket, std::string response);
-
-    void handleRequest2(Socket &socketConnection);
+    void handleRequestWithTimeoutSupport(Socket &socketConnection);
+    void handleRequest(Socket &socketConnection);
 };
 

@@ -13,10 +13,11 @@ class HttpParserBadSyntaxException : public HttpParserException {
 
 public:
     HttpParserBadSyntaxException() : HttpParserException(getMessage()) {}
+
     HttpParserBadSyntaxException(Exception &parent) : HttpParserException(getMessage(), parent) {}
 
 private:
-    std::string getMessage(){
+    std::string getMessage() {
         return "Bad syntax of HTTP request";
     }
 
