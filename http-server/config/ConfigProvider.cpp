@@ -13,9 +13,13 @@ ConfigProvider::ConfigProvider(int ac, char **av) {
     const char *SERVER_PORT_OPTION = "server_port";
     const char *FCGI_IP_OPTION = "fcgi_ip";
     const char *FCGI_PORT_OPTION = "fcgi_port";
+    const char *TIMEOUT_OPTION = "timeout";
     const char *DEBUG_OPTION = "debug";
     const char *HELP_OPTION = "help";
     const char *CONFIG_OPTION = "config";
+
+    const unsigned int DEFAULT_TIMEOUT = 60;
+    const unsigned int DEFAULT_SEVER_PORT = 8000;
 
     try {
         std::string configFilePath;
@@ -32,12 +36,11 @@ ConfigProvider::ConfigProvider(int ac, char **av) {
 
         po::options_description config("Configuration");
         config.add_options()
-                (SERVER_IP_OPTION, po::value<std::string>(&this->serverAddress.ip)->default_value(LOCALHOST_VALUE),
-                 "set server ip address")
-                (SERVER_PORT_OPTION, po::value<int>(&this->serverAddress.port)->default_value(8000), "set server port")
-                (FCGI_IP_OPTION, po::value<std::string>(&this->fcgiAppAddres.ip)->default_value(LOCALHOST_VALUE),
-                 "set fcgi application ip address")
-                (FCGI_PORT_OPTION, po::value<int>(&this->fcgiAppAddres.port)->required(), "set fcgi application port");
+                (SERVER_IP_OPTION, po::value<std::string>(&this->serverAddress.ip)->default_value(LOCALHOST_VALUE), "set server ip address")
+                (SERVER_PORT_OPTION, po::value<int>(&this->serverAddress.port)->default_value(DEFAULT_SEVER_PORT), "set server port")
+                (FCGI_IP_OPTION, po::value<std::string>(&this->fcgiAppAddres.ip)->default_value(LOCALHOST_VALUE), "set fcgi application ip address")
+                (FCGI_PORT_OPTION, po::value<int>(&this->fcgiAppAddres.port)->required(), "set fcgi application port")
+                (TIMEOUT_OPTION, po::value<int>(&this->timeout)->default_value(DEFAULT_TIMEOUT), "time after which server responds with timeout status");
 
         po::options_description all("Allowed options");
         all.add(generic).add(config);
@@ -80,4 +83,8 @@ const HostAddress ConfigProvider::getFcgiAppAddres() {
 
 bool ConfigProvider::isDebug() const {
     return debug;
+}
+
+int ConfigProvider::getTimeout() const {
+    return timeout;
 }

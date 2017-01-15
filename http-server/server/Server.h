@@ -10,7 +10,7 @@
 
 class Server {
 public:
-    Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider);
+    Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider, int timeout);
     void listenForever();
     virtual ~Server();
 
@@ -18,6 +18,7 @@ private:
     Socket * listenSocket;
     ContentProvider *dynamicContentProvider;
     HttpParser* httpParser;
+    int timeout;
     void sendResponse(Socket &socket, std::string response);
     void handleRequestWithTimeoutSupport(Socket &socketConnection);
     void handleRequest(Socket &socketConnection);

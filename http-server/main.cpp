@@ -19,13 +19,13 @@ int main(int ac, char **av) {
     logger->info(logo);
 
     try {
-        ConfigProvider serverConfigProvider = ConfigProvider(ac, av);
-        if (serverConfigProvider.isDebug()) {
+        ConfigProvider configProvider = ConfigProvider(ac, av);
+        if (configProvider.isDebug()) {
             spdlog::set_level(spdlog::level::debug);
         }
-        ContentProvider *contentProvider = new FcgiContentProvider(serverConfigProvider.getFcgiAppAddres(),
-                                                                   serverConfigProvider.getServerAddress());
-        Server server = Server(serverConfigProvider.getServerAddress(), contentProvider);
+        ContentProvider *contentProvider = new FcgiContentProvider(configProvider.getFcgiAppAddres(),
+                                                                   configProvider.getServerAddress());
+        Server server = Server(configProvider.getServerAddress(), contentProvider, configProvider.getTimeout());
         server.listenForever();
     }
     catch (Exception &exception) {

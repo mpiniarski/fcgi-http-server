@@ -8,7 +8,7 @@
 
 static auto logger = spdlog::stdout_color_mt("Server");
 
-Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider) {
+Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider, int timeout) {
     try {
         int socketDescriptor = socket(PF_INET, SOCK_STREAM, 0);
         listenSocket = new Socket(socketDescriptor);
@@ -18,6 +18,7 @@ Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvide
 
         this->dynamicContentProvider = dynamicContentProvider;
         this->httpParser = new HttpParser();
+        this->timeout = timeout;
     }
     catch (SocketException &exception) {
         throw FatalServerException(exception);
@@ -35,7 +36,7 @@ void Server::listenForever() {
 
 void Server::handleRequestWithTimeoutSupport(Socket &socketConnection) {
     boost::thread handleRequestThread(&Server::handleRequest, this, boost::ref(socketConnection));
-    if (! handleRequestThread.try_join_for(boost::chrono::seconds(3))) {
+    if (! handleRequestThread.try_join_for(boost::chrono::seconds(this->timeout))) {
         handleRequestThread.interrupt();
         logger->warn("Response timeout");
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_504_GATEWAY_TIMEOUT);

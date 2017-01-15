@@ -15,12 +15,15 @@ public:
     const HostAddress getServerAddress();
     const HostAddress getFcgiAppAddres();
 
+    int getTimeout() const;
+
     bool isDebug() const;
 
 private:
     HostAddress serverAddress;
     HostAddress fcgiAppAddres;
     bool debug;
+    int timeout;
 };
 
 
