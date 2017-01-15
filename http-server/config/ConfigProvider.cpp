@@ -3,7 +3,6 @@
 #include <boost/program_options.hpp>
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <stdlib.h>
 
 namespace po = boost::program_options;
@@ -24,23 +23,29 @@ ConfigProvider::ConfigProvider(int ac, char **av) {
 
         po::options_description generic("Generic options");
         generic.add_options()
-                ((std::string(HELP_OPTION)+",h").c_str(), po::bool_switch(&isHelpOption)->default_value(false), "produce help message")
-                ((std::string(DEBUG_OPTION)+",d").c_str(), po::bool_switch(&this->debug)->default_value(false), "turn on debug messages")
-                ((std::string(CONFIG_OPTION)+",c").c_str(), po::value<std::string>(&configFilePath), "path to config file");
+                ((std::string(HELP_OPTION) + ",h").c_str(), po::bool_switch(&isHelpOption)->default_value(false),
+                 "produce help message")
+                ((std::string(DEBUG_OPTION) + ",d").c_str(), po::bool_switch(&this->debug)->default_value(false),
+                 "turn on debug messages")
+                ((std::string(CONFIG_OPTION) + ",c").c_str(), po::value<std::string>(&configFilePath),
+                 "path to config file");
 
         po::options_description config("Configuration");
         config.add_options()
-                (SERVER_IP_OPTION, po::value<std::string>(&this->serverAddress.ip)->default_value(LOCALHOST_VALUE), "set server ip address")
+                (SERVER_IP_OPTION, po::value<std::string>(&this->serverAddress.ip)->default_value(LOCALHOST_VALUE),
+                 "set server ip address")
                 (SERVER_PORT_OPTION, po::value<int>(&this->serverAddress.port)->default_value(8000), "set server port")
-                (FCGI_IP_OPTION, po::value<std::string>(&this->fcgiAppAddres.ip)->default_value(LOCALHOST_VALUE), "set fcgi application ip address")
-                (FCGI_PORT_OPTION, po::value<int>(&this->serverAddress.port)->required(), "set fcgi application port");
+                (FCGI_IP_OPTION, po::value<std::string>(&this->fcgiAppAddres.ip)->default_value(LOCALHOST_VALUE),
+                 "set fcgi application ip address")
+                (FCGI_PORT_OPTION, po::value<int>(&this->fcgiAppAddres.port)->required(), "set fcgi application port");
 
         po::options_description all("Allowed options");
         all.add(generic).add(config);
 
         po::variables_map vm;
-        po::store(po::parse_command_line(ac, (const char *const *) av, generic), vm);
-
+        po::store(po::command_line_parser(ac, (const char *const *) av)
+                          .options(generic)
+                          .run(), vm);
         po::notify(vm);
 
         if (isHelpOption) {
@@ -48,7 +53,7 @@ ConfigProvider::ConfigProvider(int ac, char **av) {
             exit(1);
         }
 
-        po::store(po::parse_command_line(ac, (const char *const *) av, config), vm);
+        po::store(po::parse_command_line(ac, (const char *const *) av, all), vm);
         if (configFilePath != "") {
             std::ifstream configFile(configFilePath.c_str());
             if (configFile.fail()) {
@@ -59,7 +64,7 @@ ConfigProvider::ConfigProvider(int ac, char **av) {
         po::notify(vm);
 
     }
-    catch (po::error& exception){
+    catch (po::error &exception) {
         throw ConfigException(exception.what());
     }
 }
