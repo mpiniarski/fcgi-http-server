@@ -7,7 +7,7 @@
 
 static auto logger = spdlog::stdout_color_mt("Server");
 
-Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider) {
+Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider, ContentProvider *staticContentProvider) {
     try {
         int socketDescriptor = socket(PF_INET, SOCK_STREAM, 0);
         listenSocket = new Socket(socketDescriptor);
@@ -16,6 +16,7 @@ Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvide
         listenSocket->setListen(1);
 
         this->dynamicContentProvider = dynamicContentProvider;
+        this->staticContentProvider = staticContentProvider;
         this->httpParser = new HttpParser();
     }
     catch (SocketException &exception) {
@@ -36,10 +37,10 @@ void Server::handleRequest(Socket &socketConnection) {
     try {
         std::string request = socketConnection.receiveMessage();
         logger->debug("Received request:\n{}", request);
-        HttpRequest httpRequest = httpParser->parseToHttpRequest(request); //TODO add parsing exception (400?)
+        HttpRequest httpRequest = httpParser->parseToHttpRequest(request);
         //TODO decide whether to use static or dynamic content provider
-        std::string httpResponse = dynamicContentProvider->getResponse(
-                httpRequest); // TODO add timeout exception (504?)
+//        std::string httpResponse = dynamicContentProvider->getResponse(httpRequest); // TODO add timeout exception (504?)
+        std::string httpResponse = staticContentProvider->getResponse(httpRequest);
         //TODO validate response(?)
         socketConnection.sendMessage(httpResponse);
     }

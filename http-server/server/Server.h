@@ -10,7 +10,7 @@
 
 class Server {
 public:
-    Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider);
+    Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider, ContentProvider *staticContentProvider);
 
     void listenForever();
     virtual ~Server();
@@ -18,6 +18,7 @@ public:
 private:
     Socket * listenSocket;
     ContentProvider *dynamicContentProvider;
+    ContentProvider *staticContentProvider;
     HttpParser* httpParser;
     void handleRequest(Socket &socketConnection);
     void sendResponse(Socket &socket, std::string response);

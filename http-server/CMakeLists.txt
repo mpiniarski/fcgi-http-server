@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 project(fcgi_http_server)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread -lboost_program_options")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread -lboost_program_options -lboost_system -lboost_filesystem")
 
 set(SOURCE_FILES
         main.cpp
@@ -30,5 +30,7 @@ set(SOURCE_FILES
         config/ConfigProvider.h
         config/exceptions.h
         server/http/exceptions.h
+        content/static/StaticContentProvider.cpp
+        content/static/StaticContentProvider.h
         )
 add_executable(fcgi_http_server ${SOURCE_FILES})
