@@ -7,7 +7,9 @@ public:
     virtual std::string getResponse(HttpRequest request) override;
 
 private:
-    bool checkIfFileExists(std::string path);
+    std::string getFullPath(std::string uri);
+    std::string getFileContent(const char *filename);
+    void getFileResponse(std::string path, HttpResponse &httpResponse);
 };
 
 

@@ -89,4 +89,6 @@ struct HttpResponse {
         status(status),
         headers(headers),
         body(body) {}
+
+    HttpResponse() {}
 };
