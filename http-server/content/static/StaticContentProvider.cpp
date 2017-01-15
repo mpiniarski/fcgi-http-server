@@ -3,6 +3,7 @@
 #include <boost/filesystem.hpp>
 #include <iostream>
 #include <boost/regex_fwd.hpp>
+#include <magic.h>
 
 using namespace boost::filesystem;
 
@@ -10,16 +11,17 @@ std::string StaticContentProvider::getResponse(HttpRequest request) {
     // TODO error responses
 
     std::string response;
-    HttpResponse httpResponse;
-    httpResponse.version = HTTP_VERSION_1_0;
 
     if (request.method != "GET") {
         response = "Not a get method.";
         return response;
     }
 
-    std::string path = getFullPath(request.uri);
+    HttpResponse httpResponse;
+    httpResponse.version = HTTP_VERSION_1_0;
+    getFileType(request.uri, httpResponse);
 
+    std::string path = getFullPath(request.uri);
     if (exists(path)) {
         if (is_regular_file(path)) {
             // file
@@ -44,18 +46,19 @@ std::string StaticContentProvider::getResponse(HttpRequest request) {
 }
 
 void StaticContentProvider::getFileResponse(std::string path, HttpResponse &httpResponse) {
-    const char* filename = path.c_str();
-    httpResponse.body = getFileContent(filename);
+    httpResponse.body = getFileContent(path.c_str());
     httpResponse.status = HTTP_200_OK;
-    std::map<std::string, std::string> headers;
-    headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(httpResponse.body.length())));
-    headers.insert(std::pair<std::string, std::string>("Content-Type", "text/html"));
-    httpResponse.headers = headers;
+    httpResponse.headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(httpResponse.body.length())));
 }
 
 std::string StaticContentProvider::getFullPath(std::string uri) {
-    if( uri[0] == '/' ) { uri.erase(0, 1); }
+    uri = getFilename(uri);
     uri = "/home/joanna/http-files/" + uri;
+    return uri;
+}
+
+std::string StaticContentProvider::getFilename(std::string uri) {
+    if( uri[0] == '/' ) { uri.erase(0, 1); }
     return uri;
 }
 
@@ -72,6 +75,14 @@ std::string StaticContentProvider::getFileContent(const char *filename) {
         return(contents);
     }
     throw(errno);
+}
+
+void StaticContentProvider::getFileType(std::string uri, HttpResponse &httpResponse) {
+    magic_t magicCookie = magic_open(MAGIC_MIME_TYPE);
+    magic_load(magicCookie, NULL);
+    std::string filename = getFullPath(uri);
+    const char *mimetype =  magic_file(magicCookie, filename.c_str());
+    httpResponse.headers.insert(std::pair<std::string, std::string>("Content-Type", mimetype));
 }
 
 
