@@ -19,19 +19,25 @@ std::string StaticContentProvider::getResponse(HttpRequest request) {
 
     HttpResponse httpResponse;
     httpResponse.version = HTTP_VERSION_1_0;
-    getFileType(request.uri, httpResponse);
 
-    std::string path = getFullPath(request.uri);
-    if (exists(path)) {
-        if (is_regular_file(path)) {
+    std::string fullPath = getFullPath(request.uri);
+    if (exists(fullPath)) {
+        if (is_regular_file(fullPath)) {
             // file
-            getFileResponse(path, httpResponse);
+            getFileResponse(request.uri, httpResponse);
         }
-        else if (is_directory(path)) {
+        else if (is_directory(fullPath)) {
             // directory
+            std::string index = fullPath + "index.html";
+            if (exists(index)) {
+                getDirectoryResponse(index, httpResponse);
+            }
+            else {
+                response = "No index file in this directory.";
+            }
         }
         else {
-            // not path nor directory, but exists
+            // not fullPath nor directory, but exists
         }
     }
     else {
@@ -45,16 +51,22 @@ std::string StaticContentProvider::getResponse(HttpRequest request) {
     return response;
 }
 
-void StaticContentProvider::getFileResponse(std::string path, HttpResponse &httpResponse) {
-    httpResponse.body = getFileContent(path.c_str());
+void StaticContentProvider::getFileResponse(std::string filename, HttpResponse &httpResponse) {
+    httpResponse.body = getFileContent(getFullPath(filename).c_str());
     httpResponse.status = HTTP_200_OK;
     httpResponse.headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(httpResponse.body.length())));
+    getFileType(filename, httpResponse);
+}
+
+void StaticContentProvider::getDirectoryResponse(std::string index, HttpResponse &httpResponse) {
+    httpResponse.body = getFileContent(index.c_str());
+    httpResponse.status = HTTP_200_OK;
+    httpResponse.headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(httpResponse.body.length())));
+    getFileType("index.html", httpResponse);
 }
 
 std::string StaticContentProvider::getFullPath(std::string uri) {
-    uri = getFilename(uri);
-    uri = "/home/joanna/http-files/" + uri;
-    return uri;
+    return "/home/joanna/http-files/" + getFilename(uri);
 }
 
 std::string StaticContentProvider::getFilename(std::string uri) {
@@ -84,6 +96,5 @@ void StaticContentProvider::getFileType(std::string uri, HttpResponse &httpRespo
     const char *mimetype =  magic_file(magicCookie, filename.c_str());
     httpResponse.headers.insert(std::pair<std::string, std::string>("Content-Type", mimetype));
 }
-
 
 
