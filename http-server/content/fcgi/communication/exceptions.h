@@ -22,6 +22,19 @@ private:
 
 };
 
+class FcgiCommunicationClosedException : public FcgiCommunicationException {
+public:
+    FcgiCommunicationClosedException () : FcgiCommunicationException(getMessage()) {}
+
+    FcgiCommunicationClosedException (Exception &causedBy) : FcgiCommunicationException(getMessage(), causedBy) {}
+
+private:
+    std::string getMessage() {
+        return "FCGI appliaction connection has been closed";
+    }
+
+};
+
 class FcgiCommunicationRequestSendException : public FcgiCommunicationException {
 public:
     FcgiCommunicationRequestSendException() : FcgiCommunicationException(getMessage()) {}

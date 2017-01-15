@@ -4,7 +4,7 @@
 
 class ConnectionClosedException : public Exception {
 public:
-    ConnectionClosedException() : Exception("Connection have been closed") {}
+    ConnectionClosedException() : Exception("Connection has been closed") {}
 };
 
 class SocketException : public ErrorCodeBasedException {

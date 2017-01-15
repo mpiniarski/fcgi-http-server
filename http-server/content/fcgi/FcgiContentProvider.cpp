@@ -7,10 +7,10 @@
 static auto logger = spdlog::stdout_color_mt("FCGI Content Provider");
 
 FcgiContentProvider::FcgiContentProvider(HostAddress fcgiAddress, HostAddress serverAddress) {
-    try{
+    try {
         fcgiCommunicator = new FcgiCommunicator(fcgiAddress);
     }
-    catch(FcgiCommunicationEstablishException& exception){
+    catch (FcgiCommunicationEstablishException &exception) {
         throw ContentProviderCreatingException(exception);
     }
     fcgiParser = new FcgiParser();
@@ -39,7 +39,8 @@ std::string FcgiContentProvider::getResponse(HttpRequest request) {
 
 void FcgiContentProvider::addServerParameters(FcgiRequest &fcgiRequest) const {
     fcgiRequest.parameters.insert(std::pair<std::string, std::string>("SERVER_NAME", serverAddress.ip));
-    fcgiRequest.parameters.insert(std::pair<std::string, std::string>("SERVER_PORT", std::to_string(serverAddress.port)));
+    fcgiRequest.parameters.insert(
+            std::pair<std::string, std::string>("SERVER_PORT", std::to_string(serverAddress.port)));
 }
 
 std::string FcgiContentProvider::generateStringHttpResponse(FcgiResponse &response) {

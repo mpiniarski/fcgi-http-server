@@ -4,7 +4,6 @@
 #include "http/exceptions.h"
 #include <iostream>
 #include <spdlog/spdlog.h>
-#include <thread>
 
 static auto logger = spdlog::stdout_color_mt("Server");
 
@@ -38,35 +37,38 @@ void Server::handleRequest(Socket &socketConnection) {
     try {
         std::string request = socketConnection.receiveMessage();
         logger->debug("Received request:\n{}", request);
-        HttpRequest httpRequest = httpParser->parseToHttpRequest(request); //TODO add parsing exception (400?)
+        HttpRequest httpRequest = httpParser->parseToHttpRequest(request);
         //TODO decide whether to use static or dynamic content provider
-        std::string httpResponse = dynamicContentProvider->getResponse(
-                httpRequest); // TODO add timeout exception (504?)
-        //TODO validate response(?)
+        std::string httpResponse = dynamicContentProvider->getResponse(httpRequest);//TODO add timeout exception (504?)
         socketConnection.sendMessage(httpResponse);
         logger->debug("Sent response:\n{}", httpResponse);
         delete (&socketConnection);
     }
     catch (ConnectionClosedException &exception) {
         logger->warn(exception.what());
+        delete (&socketConnection);
     }
     catch (HttpParserException &exception) {
         logger->error(exception.what());
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_400_BAD_REQUEST);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
+        delete (&socketConnection);
     }
     catch (SocketMessageSendException &exception) {
         logger->error(exception.what());
+        delete (&socketConnection);
     }
     catch (SocketException &exception) {
         logger->error(exception.what());
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
+        delete (&socketConnection);
     }
     catch (ContentProviderRespondingException &exception) {
         logger->error(exception.what());
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
+        delete (&socketConnection);
     }
 }
 

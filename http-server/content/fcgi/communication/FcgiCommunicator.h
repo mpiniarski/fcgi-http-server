@@ -43,6 +43,8 @@ private:
     void sendParameters(uint16_t requestId, const std::map<std::string, std::string> parameters);
 
     std::string toProperSizeString(uint32_t number);
+
+    void manageOneRecord();
 };
 
 

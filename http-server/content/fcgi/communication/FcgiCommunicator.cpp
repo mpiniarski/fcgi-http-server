@@ -4,12 +4,14 @@
 #include <map>
 #include <thread>
 #include <zconf.h>
+#include <spdlog/spdlog.h>
 #include "FcgiCommunicator.h"
 #include "../fcgi.h"
-#include "../FcgiParser.h"
 #include "../../../server/exception/exceptions.h"
 #include "../../../socket/exceptions.h"
 #include "exceptions.h"
+
+static auto logger = spdlog::stdout_color_mt("FCGI Communicator");
 
 FcgiCommunicator::FcgiCommunicator(HostAddress &fcgiAddress) {
     try {
@@ -23,11 +25,13 @@ FcgiCommunicator::FcgiCommunicator(HostAddress &fcgiAddress) {
     catch (SocketException &exception) {
         throw FcgiCommunicationEstablishException(exception);
     }
-
 }
 
 void FcgiCommunicator::sendRequest(FcgiRequest &request) {
     try {
+        if(!isListening){
+            throw FcgiCommunicationClosedException();
+        }
         sendBeginRecord(request.id);
         sendStream(request.id, request.body, FCGI_STDIN);
         sendParameters(request.id, request.parameters);
@@ -84,35 +88,49 @@ std::string FcgiCommunicator::toProperSizeString(uint32_t number) {
 void FcgiCommunicator::listenForResponses() {
     while (isListening) {
         try {
-            FCGI_Record_Header header = FCGI_Record_Header(
-                    (void *) communicationSocket->receiveMessage(sizeof(FCGI_Record_Header)).c_str());
-            std::string bodyString = communicationSocket->receiveMessage(header.contentLength);
-            communicationSocket->receiveMessage(header.paddingLength);
-
-            FcgiResponse &response = responseMap[header.requestId];
-
-            if (header.type == FCGI_STDOUT) {
-                response.STDOUT += bodyString;
-            } else if (header.type == FCGI_STDERR) {
-                response.STDERR += bodyString;
-            } else if (header.type == FCGI_END_REQUEST) {
-                FCGI_Record_EndRequestBody endRequestBody = FCGI_Record_EndRequestBody((void *) bodyString.c_str());
-                response.appStatus = endRequestBody.appStatus;
-                response.protocolStatus = endRequestBody.protocolStatus;
-                response.isFinished = true;
-            }
+            manageOneRecord();
         }
-        catch (ConnectionClosedException &exception) {
-            throw FcgiCommunicationResponseReceiveException(exception);
-        }
-        catch (SocketException &exception) {
-            throw FcgiCommunicationResponseReceiveException(exception);
+        catch (FcgiCommunicationResponseReceiveException &exception) {
+            logger->critical(exception.what());
+            isListening = false;
         }
     }
 }
 
+void FcgiCommunicator::manageOneRecord() {
+    try {
+        FCGI_Record_Header header = FCGI_Record_Header(
+                (void *) communicationSocket->receiveMessage(sizeof(FCGI_Record_Header)).c_str());
+        std::string bodyString = communicationSocket->receiveMessage(header.contentLength);
+        communicationSocket->receiveMessage(header.paddingLength);
+
+        FcgiResponse &response = responseMap[header.requestId];
+
+        if (header.type == FCGI_STDOUT) {
+            response.STDOUT += bodyString;
+        } else if (header.type == FCGI_STDERR) {
+            response.STDERR += bodyString;
+        } else if (header.type == FCGI_END_REQUEST) {
+            FCGI_Record_EndRequestBody endRequestBody = FCGI_Record_EndRequestBody((void *) bodyString.c_str());
+            response.appStatus = endRequestBody.appStatus;
+            response.protocolStatus = endRequestBody.protocolStatus;
+            response.isFinished = true;
+        }
+    }
+    catch (ConnectionClosedException &exception) {
+        throw FcgiCommunicationResponseReceiveException(exception);
+    }
+    catch (SocketException &exception) {
+        throw FcgiCommunicationResponseReceiveException(exception);
+    }
+}
+
+
 FcgiResponse FcgiCommunicator::receiveResponse(int requestId) {
     while (true) {
+        if(!isListening){
+            throw FcgiCommunicationClosedException();
+        }
         FcgiResponse &response = responseMap[requestId];
         if (response.isFinished) {
             return response;
