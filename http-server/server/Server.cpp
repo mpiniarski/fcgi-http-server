@@ -28,6 +28,7 @@ Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvide
 void Server::listenForever() {
     while (true) {
         Socket *clientSocket = listenSocket->acceptConnection();
+        logger->debug("Accepted new connection");
         std::thread handleThread(&Server::handleRequest, this, std::ref(*clientSocket));
         handleThread.detach();
     }
@@ -43,6 +44,7 @@ void Server::handleRequest(Socket &socketConnection) {
                 httpRequest); // TODO add timeout exception (504?)
         //TODO validate response(?)
         socketConnection.sendMessage(httpResponse);
+        logger->debug("Sent response:\n{}", httpResponse);
         delete (&socketConnection);
     }
     catch (ConnectionClosedException &exception) {

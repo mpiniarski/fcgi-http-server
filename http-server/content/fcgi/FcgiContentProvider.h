@@ -8,7 +8,7 @@
 
 class FcgiContentProvider : public ContentProvider{
 public:
-    FcgiContentProvider(HostAddress fcgiAddress);
+    FcgiContentProvider(HostAddress fcgiAddress, HostAddress serverAddress);
 
     virtual std::string getResponse(HttpRequest request) override;
 
@@ -20,7 +20,11 @@ private:
     FcgiParser* fcgiParser;
     HttpParser* httpParser;
 
+    HostAddress serverAddress;
+
     std::string fixResponse(std::string result) const;
+
+    void addServerParameters(FcgiRequest &fcgiRequest) const;
 };
 
 

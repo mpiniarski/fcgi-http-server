@@ -23,7 +23,8 @@ int main(int ac, char **av) {
         if (serverConfigProvider.isDebug()) {
             spdlog::set_level(spdlog::level::debug);
         }
-        ContentProvider *contentProvider = new FcgiContentProvider(serverConfigProvider.getFcgiAppAddres());
+        ContentProvider *contentProvider = new FcgiContentProvider(serverConfigProvider.getFcgiAppAddres(),
+                                                                   serverConfigProvider.getServerAddress());
         Server server = Server(serverConfigProvider.getServerAddress(), contentProvider);
         server.listenForever();
     }
