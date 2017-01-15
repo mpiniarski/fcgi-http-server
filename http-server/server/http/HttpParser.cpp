@@ -95,7 +95,7 @@ void HttpParser::validateRequestSyntax(HttpRequest httpRequest) {
         throw HttpParserBadSyntaxException();
     }
 
-    std::regex pathRegex("\\/([\\w\\d\\.-]+\\/?)*(\\?([\\w\\d\\.-]+\\=[\\w\\d\\.-]+(&|;))*([\\w\\d\\.-]+\\=[\\w\\d\\.-]+))?");
+    std::regex pathRegex("\\/([\\w\\.-]+\\/?)*(\\?([\\w\\.-]+\\=[\\w\\.-]+(&|;))*([\\w\\.-]+\\=[\\w\\.-]+))?");
     if (!std::regex_match(httpRequest.uri, pathRegex)) {
         throw HttpParserBadSyntaxException();
     }
