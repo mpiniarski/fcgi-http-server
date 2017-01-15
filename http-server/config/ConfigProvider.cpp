@@ -45,6 +45,7 @@ ConfigProvider::ConfigProvider(int ac, char **av) {
         po::variables_map vm;
         po::store(po::command_line_parser(ac, (const char *const *) av)
                           .options(generic)
+                          .allow_unregistered()
                           .run(), vm);
         po::notify(vm);
 
