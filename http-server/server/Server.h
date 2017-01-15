@@ -21,5 +21,7 @@ private:
     HttpParser* httpParser;
     void handleRequest(Socket &socketConnection);
     void sendResponse(Socket &socket, std::string response);
+
+    void handleRequest2(Socket &socketConnection);
 };
 

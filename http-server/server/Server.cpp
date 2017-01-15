@@ -4,6 +4,7 @@
 #include "http/exceptions.h"
 #include <iostream>
 #include <spdlog/spdlog.h>
+#include <boost/thread/thread.hpp>
 
 static auto logger = spdlog::stdout_color_mt("Server");
 
@@ -34,41 +35,54 @@ void Server::listenForever() {
 }
 
 void Server::handleRequest(Socket &socketConnection) {
+    boost::thread th1(&Server::handleRequest2, this, boost::ref(socketConnection));
+    bool b = th1.try_join_for(boost::chrono::seconds(3));
+    if (!b) {
+        th1.interrupt();
+        logger->warn("Timeout");
+        HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_504_GATEWAY_TIMEOUT);
+        sendResponse(socketConnection, httpParser->parseToStringResponse(response));
+    }
+    delete (&socketConnection);
+}
+
+void Server::handleRequest2(Socket &socketConnection) {
     try {
         std::string request = socketConnection.receiveMessage();
         logger->debug("Received request:\n{}", request);
         HttpRequest httpRequest = httpParser->parseToHttpRequest(request);
         //TODO decide whether to use static or dynamic content provider
-        std::string httpResponse = dynamicContentProvider->getResponse(httpRequest);//TODO add timeout exception (504?)
+        std::string httpResponse = dynamicContentProvider->getResponse(httpRequest);
+        boost::this_thread::interruption_point();
         socketConnection.sendMessage(httpResponse);
         logger->debug("Sent response:\n{}", httpResponse);
-        delete (&socketConnection);
     }
     catch (ConnectionClosedException &exception) {
         logger->warn(exception.what());
-        delete (&socketConnection);
     }
     catch (HttpParserException &exception) {
         logger->error(exception.what());
+        boost::this_thread::interruption_point();
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_400_BAD_REQUEST);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
-        delete (&socketConnection);
     }
     catch (SocketMessageSendException &exception) {
         logger->error(exception.what());
-        delete (&socketConnection);
     }
     catch (SocketException &exception) {
         logger->error(exception.what());
+        boost::this_thread::interruption_point();
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
-        delete (&socketConnection);
     }
     catch (ContentProviderRespondingException &exception) {
         logger->error(exception.what());
+        boost::this_thread::interruption_point();
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
-        delete (&socketConnection);
+    }
+    catch (boost::thread_interrupted & exception) {
+        logger->error("Thread interrupted");
     }
 }
 
