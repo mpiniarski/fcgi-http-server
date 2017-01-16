@@ -1,5 +1,6 @@
 #include "StaticContentProvider.h"
 #include "../../server/http/HttpParser.h"
+#include "../exceptions.h"
 #include <boost/filesystem.hpp>
 #include <iostream>
 #include <boost/regex_fwd.hpp>
@@ -8,7 +9,6 @@
 using namespace boost::filesystem;
 
 std::string StaticContentProvider::getResponse(HttpRequest request) {
-    // TODO error responses
 
     std::string response;
     HttpResponse httpResponse;
@@ -42,6 +42,7 @@ std::string StaticContentProvider::getResponse(HttpRequest request) {
         }
         else {
             // not fullPath nor directory, but exists
+            throw ContentProviderRespondingException(request);
         }
     }
     else {
