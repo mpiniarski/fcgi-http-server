@@ -35,7 +35,9 @@ std::string StaticContentProvider::getResponse(HttpRequest request) {
                 getDirectoryResponse(index, httpResponse);
             }
             else {
-                response = "No index file in this directory.";
+                httpResponse.status = HTTP_404_NOT_FOUND;
+                response = httpParser.parseToStringResponse(httpResponse);
+                return response;
             }
         }
         else {
@@ -44,7 +46,9 @@ std::string StaticContentProvider::getResponse(HttpRequest request) {
     }
     else {
         // doesn't exist
-        response = "File does not exist.";
+        httpResponse.status = HTTP_404_NOT_FOUND;
+        response = httpParser.parseToStringResponse(httpResponse);
+        return response;
     }
 
     response = httpParser.parseToStringResponse(httpResponse);
