@@ -11,14 +11,16 @@ std::string StaticContentProvider::getResponse(HttpRequest request) {
     // TODO error responses
 
     std::string response;
-
-    if (request.method != "GET") {
-        response = "Not a get method.";
-        return response;
-    }
-
     HttpResponse httpResponse;
     httpResponse.version = HTTP_VERSION_1_0;
+    HttpParser httpParser = HttpParser();
+
+
+    if (request.method != "GET") {
+        httpResponse.status = HTTP_400_BAD_REQUEST;
+        response = httpParser.parseToStringResponse(httpResponse);
+        return response;
+    }
 
     std::string fullPath = getFullPath(request.uri);
     if (exists(fullPath)) {
@@ -45,7 +47,6 @@ std::string StaticContentProvider::getResponse(HttpRequest request) {
         response = "File does not exist.";
     }
 
-    HttpParser httpParser = HttpParser();
     response = httpParser.parseToStringResponse(httpResponse);
 
     return response;
