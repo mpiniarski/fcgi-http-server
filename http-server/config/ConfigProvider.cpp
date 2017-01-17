@@ -17,6 +17,7 @@ ConfigProvider::ConfigProvider(int ac, char **av) {
     const char *DEBUG_OPTION = "debug";
     const char *HELP_OPTION = "help";
     const char *CONFIG_OPTION = "config";
+    const char *DYNAMIC_URI_PATTERN_OPTION = "dynamic_uri_pattern";
 
     const unsigned int DEFAULT_TIMEOUT = 60;
     const unsigned int DEFAULT_SEVER_PORT = 8000;
@@ -27,20 +28,18 @@ ConfigProvider::ConfigProvider(int ac, char **av) {
 
         po::options_description generic("Generic options");
         generic.add_options()
-                ((std::string(HELP_OPTION) + ",h").c_str(), po::bool_switch(&isHelpOption)->default_value(false),
-                 "produce help message")
-                ((std::string(DEBUG_OPTION) + ",d").c_str(), po::bool_switch(&this->debug)->default_value(false),
-                 "turn on debug messages")
-                ((std::string(CONFIG_OPTION) + ",c").c_str(), po::value<std::string>(&configFilePath),
-                 "path to config file");
+                ((std::string(HELP_OPTION) + ",h").c_str(), po::bool_switch(&isHelpOption)->default_value(false), "produce help message")
+                ((std::string(DEBUG_OPTION) + ",d").c_str(), po::bool_switch(&this->debug)->default_value(false), "turn on debug messages")
+                ((std::string(CONFIG_OPTION) + ",c").c_str(), po::value<std::string>(&configFilePath), "path to config file");
 
         po::options_description config("Configuration");
         config.add_options()
                 (SERVER_IP_OPTION, po::value<std::string>(&this->serverAddress.ip)->default_value(LOCALHOST_VALUE), "set server ip address")
                 (SERVER_PORT_OPTION, po::value<int>(&this->serverAddress.port)->default_value(DEFAULT_SEVER_PORT), "set server port")
-                (FCGI_IP_OPTION, po::value<std::string>(&this->fcgiAppAddres.ip)->default_value(LOCALHOST_VALUE), "set fcgi application ip address")
-                (FCGI_PORT_OPTION, po::value<int>(&this->fcgiAppAddres.port)->required(), "set fcgi application port")
+                (FCGI_IP_OPTION, po::value<std::string>(&this->fcgiAppAddress.ip)->default_value(LOCALHOST_VALUE), "set fcgi application ip address")
+                (FCGI_PORT_OPTION, po::value<int>(&this->fcgiAppAddress.port)->required(), "set fcgi application port")
                 (TIMEOUT_OPTION, po::value<int>(&this->timeout)->default_value(DEFAULT_TIMEOUT), "time after which server responds with timeout status");
+                (DYNAMIC_URI_PATTERN_OPTION, po::value<std::vector<std::string>>(&this->dynamicUriPatterns)->multitoken(), "list of space separated regular expressions which describe URI identifying dynamic content");
 
         po::options_description all("Allowed options");
         all.add(generic).add(config);
@@ -78,7 +77,7 @@ const HostAddress ConfigProvider::getServerAddress() {
 }
 
 const HostAddress ConfigProvider::getFcgiAppAddres() {
-    return fcgiAppAddres;
+    return fcgiAppAddress;
 }
 
 bool ConfigProvider::isDebug() const {
@@ -87,4 +86,8 @@ bool ConfigProvider::isDebug() const {
 
 int ConfigProvider::getTimeout() const {
     return timeout;
+}
+
+std::vector<std::string> ConfigProvider::getDynamicUriPatterns() const {
+    return dynamicUriPatterns;
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdint-gcc.h>
 #include <string>
+#include <vector>
 
 struct HostAddress{
     std::string ip;
@@ -14,16 +14,16 @@ public:
 
     const HostAddress getServerAddress();
     const HostAddress getFcgiAppAddres();
-
     int getTimeout() const;
-
     bool isDebug() const;
+    std::vector<std::string> getDynamicUriPatterns() const;
 
 private:
     HostAddress serverAddress;
-    HostAddress fcgiAppAddres;
+    HostAddress fcgiAppAddress;
     bool debug;
     int timeout;
+    std::vector<std::string> dynamicUriPatterns;
 };
 
 

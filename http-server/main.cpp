@@ -27,7 +27,8 @@ int main(int ac, char **av) {
         ContentProvider *dynamicContentProvider  = new FcgiContentProvider(configProvider.getFcgiAppAddres(),
                                                                    configProvider.getServerAddress());
         ContentProvider *staticContentProvider = new StaticContentProvider();
-        Server server = Server(configProvider.getServerAddress(), dynamicContentProvider, staticContentProvider, configProvider.getTimeout());
+        Server server = Server(configProvider.getServerAddress(), dynamicContentProvider, staticContentProvider,
+                               configProvider.getDynamicUriPatterns(), configProvider.getTimeout());
         server.listenForever();
     }
     catch (Exception &exception) {
