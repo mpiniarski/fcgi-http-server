@@ -2,6 +2,7 @@
 #include "server/Server.h"
 #include "server/exception/exceptions.h"
 #include "content/fcgi/FcgiContentProvider.h"
+#include "content/static/StaticContentProvider.h"
 #include <spdlog/spdlog.h>
 
 std::string logo = "\n"
@@ -23,9 +24,10 @@ int main(int ac, char **av) {
         if (configProvider.isDebug()) {
             spdlog::set_level(spdlog::level::debug);
         }
-        ContentProvider *contentProvider = new FcgiContentProvider(configProvider.getFcgiAppAddres(),
+        ContentProvider *dynamicContentProvider  = new FcgiContentProvider(configProvider.getFcgiAppAddres(),
                                                                    configProvider.getServerAddress());
-        Server server = Server(configProvider.getServerAddress(), contentProvider, configProvider.getTimeout());
+        ContentProvider *staticContentProvider = new StaticContentProvider();
+        Server server = Server(serverConfigProvider.getServerAddress(), dynamicContentProvider, staticContentProvider, configProvider.getTimeout());
         server.listenForever();
     }
     catch (Exception &exception) {

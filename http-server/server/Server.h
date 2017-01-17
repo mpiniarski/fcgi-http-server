@@ -10,13 +10,15 @@
 
 class Server {
 public:
-    Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider, int timeout);
+    Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider, ContentProvider *staticContentProvider, int timeout);
+
     void listenForever();
     virtual ~Server();
 
 private:
     Socket * listenSocket;
     ContentProvider *dynamicContentProvider;
+    ContentProvider *staticContentProvider;
     HttpParser* httpParser;
     int timeout;
     void sendResponse(Socket &socket, std::string response);

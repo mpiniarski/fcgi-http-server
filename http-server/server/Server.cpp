@@ -8,7 +8,7 @@
 
 static auto logger = spdlog::stdout_color_mt("Server");
 
-Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider, int timeout) {
+Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvider, ContentProvider *staticContentProvider, int timeout) {
     try {
         int socketDescriptor = socket(PF_INET, SOCK_STREAM, 0);
         listenSocket = new Socket(socketDescriptor);
@@ -17,6 +17,7 @@ Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvide
         listenSocket->setListen(1);
 
         this->dynamicContentProvider = dynamicContentProvider;
+        this->staticContentProvider = staticContentProvider;
         this->httpParser = new HttpParser();
         this->timeout = timeout;
     }
