@@ -2,6 +2,7 @@
 
 #include "http.h"
 #include <vector>
+#include <map>
 
 class HttpParser {
 public:

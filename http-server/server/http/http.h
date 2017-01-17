@@ -5,6 +5,9 @@
 
 struct HttpStatus {
     HttpStatus(int code, const std::string &message) : code(code), message(message) {}
+
+    HttpStatus() {}
+
     int code;
     std::string message;
 };
