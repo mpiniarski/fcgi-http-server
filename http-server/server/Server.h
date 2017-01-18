@@ -6,6 +6,7 @@
 #include "../content/ContentProvider.h"
 #include "http/HttpParser.h"
 #include "../config/ConfigProvider.h"
+#include <regex>
 
 
 class Server {
@@ -25,7 +26,8 @@ private:
     void sendResponse(Socket &socket, std::string response);
     void handleRequestWithTimeoutSupport(Socket &socketConnection);
     void handleRequest(Socket &socketConnection);
-    std::vector<std::string> dynamicUriPatterns;
+    std::vector<std::regex> dynamicUriPatterns;
 
+    bool isMatchingToDynamicUri(const HttpRequest &httpRequest) const;
 };
 

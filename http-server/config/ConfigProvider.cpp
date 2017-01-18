@@ -38,8 +38,9 @@ ConfigProvider::ConfigProvider(int ac, char **av) {
                 (SERVER_PORT_OPTION, po::value<int>(&this->serverAddress.port)->default_value(DEFAULT_SEVER_PORT), "set server port")
                 (FCGI_IP_OPTION, po::value<std::string>(&this->fcgiAppAddress.ip)->default_value(LOCALHOST_VALUE), "set fcgi application ip address")
                 (FCGI_PORT_OPTION, po::value<int>(&this->fcgiAppAddress.port)->required(), "set fcgi application port")
-                (TIMEOUT_OPTION, po::value<int>(&this->timeout)->default_value(DEFAULT_TIMEOUT), "time after which server responds with timeout status");
-                (DYNAMIC_URI_PATTERN_OPTION, po::value<std::vector<std::string>>(&this->dynamicUriPatterns)->multitoken(), "list of space separated regular expressions which describe URI identifying dynamic content");
+                (TIMEOUT_OPTION, po::value<int>(&this->timeout)->default_value(DEFAULT_TIMEOUT), "time after which server responds with timeout status")
+                (DYNAMIC_URI_PATTERN_OPTION, po::value<std::vector<std::string>>(&this->dynamicUriPatterns)->multitoken()->required(), "list of space separated regular expressions which describe URI identifying dynamic content")
+                ;
 
         po::options_description all("Allowed options");
         all.add(generic).add(config);

@@ -21,7 +21,9 @@ Server::Server(HostAddress serverAddress, ContentProvider *dynamicContentProvide
         this->staticContentProvider = staticContentProvider;
         this->httpParser = new HttpParser();
         this->timeout = timeout;
-        this->dynamicUriPatterns = dynamicUriPatterns;
+        for (std::string pattern : dynamicUriPatterns) {
+            this->dynamicUriPatterns.push_back(std::regex(pattern));
+        }
     }
     catch (SocketException &exception) {
         throw FatalServerException(exception);
@@ -39,7 +41,7 @@ void Server::listenForever() {
 
 void Server::handleRequestWithTimeoutSupport(Socket &socketConnection) {
     boost::thread handleRequestThread(&Server::handleRequest, this, boost::ref(socketConnection));
-    if (! handleRequestThread.try_join_for(boost::chrono::seconds(this->timeout))) {
+    if (!handleRequestThread.try_join_for(boost::chrono::seconds(this->timeout))) {
         handleRequestThread.interrupt();
         logger->warn("Response timeout");
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_504_GATEWAY_TIMEOUT);
@@ -53,10 +55,9 @@ void Server::handleRequest(Socket &socketConnection) {
         std::string request = socketConnection.receiveMessage();
         logger->debug("Received request:\n{}", request);
         HttpRequest httpRequest = httpParser->parseToHttpRequest(request);
-
-
-        //TODO decide whether to use static or dynamic content provider
-        std::string httpResponse = dynamicContentProvider->getResponse(httpRequest);
+        std::string httpResponse = isMatchingToDynamicUri(httpRequest) ?
+                                   dynamicContentProvider->getResponse(httpRequest) :
+                                   staticContentProvider->getResponse(httpRequest);
         boost::this_thread::interruption_point();
         socketConnection.sendMessage(httpResponse);
         logger->debug("Sent response:\n{}", httpResponse);
@@ -85,9 +86,18 @@ void Server::handleRequest(Socket &socketConnection) {
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
     }
-    catch (boost::thread_interrupted & exception) {
+    catch (boost::thread_interrupted &exception) {
         logger->warn("Thread interrupted");
     }
+}
+
+bool Server::isMatchingToDynamicUri(const HttpRequest &httpRequest) const {
+    for (std::regex pattern : dynamicUriPatterns) {
+        if (regex_match(httpRequest.uri, pattern)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Server::sendResponse(Socket &socket, std::string response) {
@@ -104,3 +114,4 @@ Server::~Server() {
     delete dynamicContentProvider;
     delete httpParser;
 }
+
