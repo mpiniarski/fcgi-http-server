@@ -1,19 +1,27 @@
 #pragma once
 
 #include "../ContentProvider.h"
+#include "../../server/http/HttpParser.h"
 
 class StaticContentProvider : public ContentProvider {
 public:
     virtual std::string getResponse(HttpRequest request) override;
 
+    StaticContentProvider();
+
+    virtual ~StaticContentProvider();
+
 private:
+    HttpParser* httpParser;
+
     std::string getFullPath(std::string uri);
+    std::string getDirectoryPath(std::string uri);
     std::string getFilename(std::string uri);
     std::string getFileContent(const char *filename);
-    void getFileType(std::string uri, HttpResponse &httpResponse);
+    const char* getFileType(std::string uri);
 
-    void getFileResponse(std::string filename, HttpResponse &httpResponse);
-    void getDirectoryResponse(std::string index, HttpResponse &httpResponse);
+    std::string getFileResponse(std::string filename);
+    std::string getDirectoryResponse(std::string index);
 };
 
 
