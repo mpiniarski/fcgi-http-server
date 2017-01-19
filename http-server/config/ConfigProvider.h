@@ -17,6 +17,7 @@ public:
     int getTimeout() const;
     bool isDebug() const;
     std::vector<std::string> getDynamicUriPatterns() const;
+    const std::string getRootPath() const;
 
 private:
     HostAddress serverAddress;
@@ -24,8 +25,6 @@ private:
     bool debug;
     int timeout;
     std::vector<std::string> dynamicUriPatterns;
+    std::string rootPath;
 };
-
-
-
 

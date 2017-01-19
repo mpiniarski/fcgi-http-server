@@ -26,7 +26,7 @@ int main(int ac, char **av) {
         }
         ContentProvider *dynamicContentProvider  = new FcgiContentProvider(configProvider.getFcgiAppAddres(),
                                                                    configProvider.getServerAddress());
-        ContentProvider *staticContentProvider = new StaticContentProvider();
+        ContentProvider *staticContentProvider = new StaticContentProvider(configProvider.getRootPath());
         Server server = Server(configProvider.getServerAddress(), dynamicContentProvider, staticContentProvider,
                                configProvider.getDynamicUriPatterns(), configProvider.getTimeout());
         server.listenForever();

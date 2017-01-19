@@ -7,12 +7,13 @@ class StaticContentProvider : public ContentProvider {
 public:
     virtual std::string getResponse(HttpRequest request) override;
 
-    StaticContentProvider();
+    StaticContentProvider(std::string rootPath);
 
     virtual ~StaticContentProvider();
 
 private:
     HttpParser* httpParser;
+    std::string rootPath;
 
     std::string getFullPath(std::string uri);
     std::string getDirectoryPath(std::string uri);

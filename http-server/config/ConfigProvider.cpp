@@ -9,6 +9,7 @@ namespace po = boost::program_options;
 
 ConfigProvider::ConfigProvider(int ac, char **av) {
     const char *LOCALHOST_VALUE = "127.0.0.1";
+    const char *ROOT_PATH_VALUE = "/srv/http_server/";
     const char *SERVER_IP_OPTION = "server_ip";
     const char *SERVER_PORT_OPTION = "server_port";
     const char *FCGI_IP_OPTION = "fcgi_ip";
@@ -18,6 +19,7 @@ ConfigProvider::ConfigProvider(int ac, char **av) {
     const char *HELP_OPTION = "help";
     const char *CONFIG_OPTION = "config";
     const char *DYNAMIC_URI_PATTERN_OPTION = "dynamic_uri_pattern";
+    const char *ROOT_PATH_OPTION = "root_path";
 
     const unsigned int DEFAULT_TIMEOUT = 60;
     const unsigned int DEFAULT_SEVER_PORT = 8000;
@@ -40,6 +42,7 @@ ConfigProvider::ConfigProvider(int ac, char **av) {
                 (FCGI_PORT_OPTION, po::value<int>(&this->fcgiAppAddress.port)->required(), "set fcgi application port")
                 (TIMEOUT_OPTION, po::value<int>(&this->timeout)->default_value(DEFAULT_TIMEOUT), "time after which server responds with timeout status")
                 (DYNAMIC_URI_PATTERN_OPTION, po::value<std::vector<std::string>>(&this->dynamicUriPatterns)->multitoken()->required(), "list of space separated regular expressions which describe URI identifying dynamic content")
+                (ROOT_PATH_OPTION, po::value<std::string>(&this->rootPath)->default_value(ROOT_PATH_VALUE), "path to static files")
                 ;
 
         po::options_description all("Allowed options");
@@ -91,4 +94,8 @@ int ConfigProvider::getTimeout() const {
 
 std::vector<std::string> ConfigProvider::getDynamicUriPatterns() const {
     return dynamicUriPatterns;
+}
+
+const std::string ConfigProvider::getRootPath() const {
+    return rootPath;
 }

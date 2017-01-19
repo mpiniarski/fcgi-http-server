@@ -8,8 +8,9 @@
 
 using namespace boost::filesystem;
 
-StaticContentProvider::StaticContentProvider() {
+StaticContentProvider::StaticContentProvider(std::string rootPath) {
     this->httpParser = new HttpParser();
+    this->rootPath = rootPath;
 }
 
 std::string StaticContentProvider::getResponse(HttpRequest request) {
@@ -63,7 +64,7 @@ std::string StaticContentProvider::getDirectoryResponse(std::string index) {
 }
 
 std::string StaticContentProvider::getFullPath(std::string uri) {
-    return "/home/joanna/http-files/" + getFilename(uri);
+    return this->rootPath + getFilename(uri);
 }
 
 std::string StaticContentProvider::getDirectoryPath(std::string uri) {
