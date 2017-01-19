@@ -6,8 +6,6 @@
 struct HttpStatus {
     HttpStatus(int code, const std::string &message) : code(code), message(message) {}
 
-    HttpStatus() {}
-
     int code;
     std::string message;
 };
@@ -89,6 +87,4 @@ struct HttpResponse {
         status(status),
         headers(headers),
         body(body) {}
-
-    HttpResponse() {}
 };

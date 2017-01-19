@@ -31,5 +31,7 @@ set(SOURCE_FILES
         config/exceptions.h
         server/http/exceptions.h
         content/static/StaticContentProvider.cpp
-        content/static/StaticContentProvider.h)
+        content/static/StaticContentProvider.h
+        content/static/exceptions.h
+        )
 add_executable(fcgi_http_server ${SOURCE_FILES})
