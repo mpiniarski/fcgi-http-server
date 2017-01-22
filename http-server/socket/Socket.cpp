@@ -133,7 +133,7 @@ void Socket::connectWith(std::string address, uint16_t port) {
     int error;
     struct sockaddr_in sck_addr;
     sck_addr.sin_family = AF_INET;
-    inet_aton(address.c_str(), &sck_addr.sin_addr);
+    error = inet_aton(address.c_str(), &sck_addr.sin_addr);
     if (error == -1) {
         throw IpAddressException(address, errno);
     }

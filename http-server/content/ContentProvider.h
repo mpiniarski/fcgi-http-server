@@ -5,4 +5,5 @@
 class ContentProvider {
 public:
     virtual std::string getResponse(HttpRequest request) = 0;
+    virtual ~ContentProvider() {}
 };

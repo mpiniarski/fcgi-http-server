@@ -55,7 +55,7 @@ std::map<std::string, std::string> HttpParser::convertHeadersToMap(std::vector<s
     std::map<std::string, std::string> headersMap;
 
     std::vector<std::string> headersNonMultiline;
-    for (int i = 1; i < headers.size(); i++) {
+    for (unsigned int i = 1; i < headers.size(); i++) {
         if(!isspace(headers[i][0])) {
             headersNonMultiline.push_back(headers[i]);
         }
@@ -67,7 +67,7 @@ std::map<std::string, std::string> HttpParser::convertHeadersToMap(std::vector<s
         }
     }
 
-    for (int i = 0; i < headersNonMultiline.size(); i++) {
+    for (unsigned int i = 0; i < headersNonMultiline.size(); i++) {
         std::string splitter = ": ";
         std::string key = headersNonMultiline[i].substr(0, headersNonMultiline[i].find(splitter));
         std::string value = headersNonMultiline[i].substr(headersNonMultiline[i].find(splitter) + 2);

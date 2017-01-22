@@ -26,7 +26,7 @@ ConfigProvider::ConfigProvider(int ac, char **av) {
 
     try {
         std::string configFilePath;
-        bool isHelpOption;
+        bool isHelpOption = false;
 
         po::options_description generic("Generic options");
         generic.add_options()
