@@ -63,26 +63,34 @@ void Server::handleRequest(Socket &socketConnection) {
         logger->debug("Sent response:\n{}", httpResponse);
     }
     catch (ConnectionClosedException &exception) {
+        boost::this_thread::interruption_point();
         logger->error(exception.what());
     }
     catch (HttpParserException &exception) {
-        logger->warn(exception.what());
         boost::this_thread::interruption_point();
+        logger->warn(exception.what());
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_400_BAD_REQUEST);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
     }
     catch (SocketMessageSendException &exception) {
+        boost::this_thread::interruption_point();
         logger->error(exception.what());
     }
     catch (SocketException &exception) {
-        logger->warn(exception.what());
         boost::this_thread::interruption_point();
+        logger->warn(exception.what());
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
     }
     catch (ContentProviderRespondingException &exception) {
-        logger->warn(exception.what());
         boost::this_thread::interruption_point();
+        logger->warn(exception.what());
+        HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
+        sendResponse(socketConnection, httpParser->parseToStringResponse(response));
+    }
+    catch (std::exception exception){
+        boost::this_thread::interruption_point();
+        logger->warn("Exception : " + std::string(exception.what()));
         HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
     }
