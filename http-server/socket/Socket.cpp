@@ -3,6 +3,7 @@
 #include "exceptions.h"
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <regex>
 
 Socket::Socket(int socketDescriptor) : socketDescriptor(socketDescriptor) {
     if (socketDescriptor == -1) {
@@ -15,26 +16,39 @@ std::string Socket::receiveMessage() const {
     size_t BUFF_SIZE = 255;
     char buf[BUFF_SIZE];
     std::string request;
+    int receivedContentLength = 0;
+    int contentLength = 0;
+    bool wasEmptyLine = false;
 
-    bytesReceived = recv(socketDescriptor, buf, BUFF_SIZE, 0);
-    if (bytesReceived > 0) {
-        request.append(buf, (unsigned long) bytesReceived);
-        if (bytesReceived == BUFF_SIZE) {
-            while (((bytesReceived = recv(socketDescriptor, buf, BUFF_SIZE, MSG_DONTWAIT)) > 0)) {
-                request.append(buf, (unsigned long) bytesReceived);
+    while (receivedContentLength < contentLength || !wasEmptyLine) {
+        bytesReceived = recv(socketDescriptor, buf, BUFF_SIZE, 0);
+
+        if (bytesReceived > 0) {
+            request.append(buf, (unsigned long) bytesReceived);
+            if ( !wasEmptyLine ) {
+                std::size_t emptyLine = request.find("\r\n\r\n");
+                if ( emptyLine != std::string::npos ) {
+                    receivedContentLength += request.substr(emptyLine+4).length();
+                    wasEmptyLine = true;
+
+                    std::regex regex("Content-Length:\\ *(\\d*)\r\n");
+                    std::smatch match;
+                    std::string headers = request.substr(0, emptyLine);
+                    if (std::regex_search(headers, match, regex)) {
+                        contentLength = std::stoi(match[1]);
+                    }
+                }
             }
-            if (bytesReceived == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
-                throw SocketMessageReceiveException(errno);
-            }
-            if (bytesReceived == 0) {
-                throw ConnectionClosedException();
+            else {
+                receivedContentLength += bytesReceived;
             }
         }
-    }
-    else if (bytesReceived == 0){
-        throw ConnectionClosedException();
-    } else {
-        throw SocketMessageReceiveException(errno);
+        else if (bytesReceived == 0) {
+            throw ConnectionClosedException();
+        }
+        else {
+            throw SocketMessageReceiveException(errno);
+        }
     }
     return request;
 }

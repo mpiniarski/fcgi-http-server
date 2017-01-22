@@ -42,6 +42,8 @@ std::string StaticContentProvider::getResponse(HttpRequest request) {
         }
     } catch (FileReadingException &exception) {
         throw ContentProviderRespondingException(request, exception);
+    } catch (FileTypeRecognitionException &exception) {
+        throw ContentProviderRespondingException(request, exception);
     }
 }
 
@@ -103,7 +105,8 @@ const char *StaticContentProvider::getFileType(std::string uri) {
     magic_load(magicCookie, NULL);
     std::string filename = getFullPath(uri);
     const char *mimetype = magic_file(magicCookie, filename.c_str());
-    return mimetype;
+    if (mimetype != NULL) return mimetype;
+    else throw FileTypeRecognitionException();
 }
 
 StaticContentProvider::~StaticContentProvider() {
