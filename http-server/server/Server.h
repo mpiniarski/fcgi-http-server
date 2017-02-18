@@ -25,9 +25,10 @@ private:
     int timeout;
     void sendResponse(Socket &socket, std::string response);
     void handleRequestWithTimeoutSupport(Socket &socketConnection);
-    void handleRequest(Socket &socketConnection);
+    void handleRequest(Socket &socketConnection, bool &isSendingInProgress);
     std::vector<std::regex> dynamicUriPatterns;
 
     bool isMatchingToDynamicUri(const HttpRequest &httpRequest) const;
+
 };
 
