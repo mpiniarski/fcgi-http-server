@@ -5,6 +5,7 @@
 #include "../../../socket/Socket.h"
 #include "../../../config/ConfigProvider.h"
 #include <thread>
+#include <condition_variable>
 
 
 struct FcgiResponse{
@@ -35,6 +36,8 @@ private:
     bool isListening;
     std::map<uint16_t, FcgiResponse> responseMap;
     std::thread listener;
+    std::mutex mutex;
+    std::condition_variable conditionalVariable;
 
     void sendBeginRecord(uint16_t requestId);
     void sendStream(uint16_t requestId, const std::string content, unsigned char type);

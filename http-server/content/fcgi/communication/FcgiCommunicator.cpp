@@ -3,7 +3,6 @@
 #include <iostream>
 #include <map>
 #include <thread>
-#include <zconf.h>
 #include <spdlog/spdlog.h>
 #include "FcgiCommunicator.h"
 #include "../fcgi.h"
@@ -56,7 +55,9 @@ void FcgiCommunicator::manageResponse() {
             FCGI_Record_EndRequestBody endRequestBody = FCGI_Record_EndRequestBody((void *) bodyString.c_str());
             response.appStatus = endRequestBody.appStatus;
             response.protocolStatus = endRequestBody.protocolStatus;
+            std::lock_guard<std::mutex> lockGuard(this->mutex);
             response.isFinished = true;
+            this->conditionalVariable.notify_all();
         }
     }
     catch (ConnectionClosedException &exception) {
@@ -68,22 +69,20 @@ void FcgiCommunicator::manageResponse() {
 }
 
 FcgiResponse FcgiCommunicator::receiveResponse(int requestId) {
-    while (true) {
-        if(!isListening){
+    std::unique_lock<std::mutex> lock(this->mutex);
+    while (!responseMap[requestId].isFinished) {
+        if (!isListening) {
             throw FcgiCommunicationClosedException();
         }
-        FcgiResponse &response = responseMap[requestId];
-        if (response.isFinished) {
-            return response;
-        } else {
-            usleep(100);
-        }
+        this->conditionalVariable.wait(lock);
     }
+    lock.unlock();
+    return responseMap[requestId];
 }
 
 void FcgiCommunicator::sendRequest(FcgiRequest &request) {
     try {
-        if(!isListening){
+        if (!isListening) {
             throw FcgiCommunicationClosedException();
         }
         sendBeginRecord(request.id);
