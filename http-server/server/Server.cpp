@@ -47,7 +47,8 @@ void Server::handleRequestWithTimeoutSupport(Socket &socketConnection) {
         if(!isSendingInProgress){
             handleRequestThread.interrupt();
             logger->warn("Response timeout");
-            HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_504_GATEWAY_TIMEOUT);
+            HttpResponse response = (new HttpResponseBuilder())
+                    ->buildWithErrorStatus(HTTP_504_GATEWAY_TIMEOUT);
             sendResponse(socketConnection, httpParser->parseToStringResponse(response));
         }
         else{
@@ -77,7 +78,8 @@ void Server::handleRequest(Socket &socketConnection, bool &isSendingInProgress) 
     catch (HttpParserException &exception) {
         boost::this_thread::interruption_point();
         logger->warn(exception.what());
-        HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_400_BAD_REQUEST);
+        HttpResponse response = (new HttpResponseBuilder())
+                ->buildWithErrorStatus(HTTP_400_BAD_REQUEST);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
     }
     catch (SocketMessageSendException &exception) {
@@ -87,19 +89,22 @@ void Server::handleRequest(Socket &socketConnection, bool &isSendingInProgress) 
     catch (SocketException &exception) {
         boost::this_thread::interruption_point();
         logger->warn(exception.what());
-        HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
+        HttpResponse response = (new HttpResponseBuilder())
+                ->buildWithErrorStatus(HTTP_500_INTERNAL_SERVER_ERROR);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
     }
     catch (ContentProviderRespondingException &exception) {
         boost::this_thread::interruption_point();
         logger->warn(exception.what());
-        HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
+        HttpResponse response = (new HttpResponseBuilder())
+                ->buildWithErrorStatus(HTTP_500_INTERNAL_SERVER_ERROR);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
     }
     catch (std::exception exception) {
         boost::this_thread::interruption_point();
         logger->warn("Exception : " + std::string(exception.what()));
-        HttpResponse response = HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR);
+        HttpResponse response = (new HttpResponseBuilder())
+                ->buildWithErrorStatus(HTTP_500_INTERNAL_SERVER_ERROR);
         sendResponse(socketConnection, httpParser->parseToStringResponse(response));
     }
     catch (boost::thread_interrupted &exception) {

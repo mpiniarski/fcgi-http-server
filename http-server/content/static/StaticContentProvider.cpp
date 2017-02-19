@@ -16,7 +16,8 @@ StaticContentProvider::StaticContentProvider(std::string rootPath) {
 std::string StaticContentProvider::getResponse(HttpRequest request) {
 
     if (request.method != "GET") {
-        HttpResponse httpResponse = HttpResponse(HTTP_VERSION_1_0, HTTP_405_METHOD_NOT_ALLOWED);
+        HttpResponse httpResponse = (new HttpResponseBuilder())
+                ->buildWithErrorStatus(HTTP_405_METHOD_NOT_ALLOWED);
         return this->httpParser->parseToStringResponse(httpResponse);
     }
 
@@ -30,14 +31,16 @@ std::string StaticContentProvider::getResponse(HttpRequest request) {
                 if (exists(index)) {
                     return getDirectoryResponse(index);
                 } else {
-                    HttpResponse httpResponse = HttpResponse(HTTP_VERSION_1_0, HTTP_404_NOT_FOUND);
+                    HttpResponse httpResponse = (new HttpResponseBuilder())
+                            ->buildWithErrorStatus(HTTP_404_NOT_FOUND);
                     return this->httpParser->parseToStringResponse(httpResponse);
                 }
             } else {
                 throw ContentProviderRespondingException(request);
             }
         } else {
-            HttpResponse httpResponse = HttpResponse(HTTP_VERSION_1_0, HTTP_404_NOT_FOUND);
+            HttpResponse httpResponse = (new HttpResponseBuilder())
+                    ->buildWithErrorStatus(HTTP_404_NOT_FOUND);
             return this->httpParser->parseToStringResponse(httpResponse);
         }
     } catch (FileReadingException &exception) {
@@ -50,18 +53,18 @@ std::string StaticContentProvider::getResponse(HttpRequest request) {
 std::string StaticContentProvider::getFileResponse(std::string filename) {
     auto body = getFileContent(getFullPath(filename).c_str());
     std::map<std::string, std::string> headers;
-    headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(body.length())));
     headers.insert(std::pair<std::string, std::string>("Content-Type", getFileType(filename)));
-    HttpResponse httpResponse = HttpResponse(HTTP_VERSION_1_0, HTTP_200_OK, body, headers);
+    HttpResponse httpResponse = (new HttpResponseBuilder())
+            ->buildWithOKStatus(HTTP_200_OK, body, headers);
     return this->httpParser->parseToStringResponse(httpResponse);
 }
 
 std::string StaticContentProvider::getDirectoryResponse(std::string index) {
     auto body = getFileContent(index.c_str());
     std::map<std::string, std::string> headers;
-    headers.insert(std::pair<std::string, std::string>("Content-Length", std::to_string(body.length())));
     headers.insert(std::pair<std::string, std::string>("Content-Type", getFileType("index.html")));
-    HttpResponse httpResponse = HttpResponse(HTTP_VERSION_1_0, HTTP_200_OK, body, headers);
+    HttpResponse httpResponse = (new HttpResponseBuilder())
+            ->buildWithOKStatus(HTTP_200_OK, body, headers);
     return this->httpParser->parseToStringResponse(httpResponse);
 }
 

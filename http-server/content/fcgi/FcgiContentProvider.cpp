@@ -50,12 +50,12 @@ std::string FcgiContentProvider::generateStringHttpResponse(FcgiResponse &respon
         // TODO Decide what to do with that. Is it specific for our FCGI application or is it standard? :
         result = fixResponse(result);
     } else if (response.protocolStatus == FCGI_CANT_MPX_CONN || response.protocolStatus == FCGI_OVERLOADED) {
-        result = httpParser->parseToStringResponse(
-                HttpResponse(HTTP_VERSION_1_0, HTTP_503_SERVICE_UNAVAILABLE)
+        result = httpParser->parseToStringResponse((new HttpResponseBuilder())
+                                                           ->buildWithErrorStatus(HTTP_503_SERVICE_UNAVAILABLE)
         );
     } else if (response.protocolStatus == FCGI_UNKNOWN_ROLE) {
-        result = httpParser->parseToStringResponse(
-                HttpResponse(HTTP_VERSION_1_0, HTTP_500_INTERNAL_SERVER_ERROR)
+        result = httpParser->parseToStringResponse((new HttpResponseBuilder())
+                                                           ->buildWithErrorStatus(HTTP_500_INTERNAL_SERVER_ERROR)
         );
     }
     return result;
